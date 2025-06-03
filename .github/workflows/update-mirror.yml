@@ -64,7 +64,7 @@ jobs:
     - name: Run cleanup and fixing script
       run: |
         python scripts/index_cleanup.py mirror-site
-        python scripts/fix_links.py mirror-site "${{ env.BASE_URL }}"
+        python scripts/fix_links.py mirror-site "${{ env.BASE_URL }}" "${{ env.NEW_BASE_URL }}"
 
     - name: Upload fixed mirror artifact
       uses: actions/upload-artifact@v4
