@@ -13,7 +13,7 @@ def remove_index_html_links(soup):
             changed = True
     return changed
 
-def fix_page_id_links(soup, base_url):
+def fix_page_id_links(soup, base_url, new_base_url):
     changed = False
     page_id_links = soup.find_all("a", href=re.compile(r"page_id=\d+"))
     for a in page_id_links:
@@ -28,16 +28,14 @@ def fix_page_id_links(soup, base_url):
             final_url = r.url
             if final_url != test_url:
                 if final_url.startswith(base_url):
-                    final_url = final_url[len(base_url):]
-                    if final_url.startswith("/"):
-                        final_url = final_url[1:]
+                    final_url = final_url.replace(base_url, new_base_url, 1)
                 a["href"] = final_url
                 changed = True
         except Exception as e:
             print(f"Warning: Failed to fetch {test_url}: {e}")
     return changed
 
-def process_file(file_path, base_url):
+def process_file(file_path, base_url, new_base_url):
     with open(file_path, "r", encoding="utf-8") as f:
         html = f.read()
 
@@ -45,7 +43,7 @@ def process_file(file_path, base_url):
     changed = False
 
     changed |= remove_index_html_links(soup)
-    changed |= fix_page_id_links(soup, base_url)
+    changed |= fix_page_id_links(soup, base_url, new_base_url)
 
     if changed:
         with open(file_path, "w", encoding="utf-8") as f:
@@ -56,13 +54,14 @@ def main():
     parser = argparse.ArgumentParser(description="Fix links in static site HTML files.")
     parser.add_argument("root_dir", help="Root directory of the static site")
     parser.add_argument("base_url", help="Base URL of the live site (e.g., https://sipe25.com)")
+    parser.add_argument("new_base_url", help="New base URL to replace old links (e.g., https://ai-sf.it/sipe)")
     args = parser.parse_args()
 
     for dirpath, _, filenames in os.walk(args.root_dir):
         for filename in filenames:
             if filename.endswith(".html"):
                 filepath = os.path.join(dirpath, filename)
-                process_file(filepath, args.base_url)
+                process_file(filepath, args.base_url, args.new_base_url)
 
 if __name__ == "__main__":
     main()
