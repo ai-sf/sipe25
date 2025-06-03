@@ -25,11 +25,16 @@ jobs:
     - name: Run HTTrack
       run: |
         httrack "https://${DOMAIN}/" \
+          --skeleton \
+          --mirror \
+          --stay-on-same-address \
+          --depth=3 \
           -O "httrack" "+*.${DOMAIN}/*" -v
 
     - name: Move and clean files
       run: |
-        mv httrack/${DOMAIN}/* mirror-site
+        mkdir -p mirror-site
+        mv httrack/${DOMAIN}/* mirror-site/
         rm -rf httrack
         cd mirror-site || exit 1
         find . -name '*.html' -exec sed -i 's%index.html%%g' {} \;
