@@ -1,0 +1,59 @@
+name: Update Static Site Mirror
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Every day at 03:00 UTC
+  workflow_dispatch:     # Allow manual trigger
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    env:
+      DOMAIN: sipe25.com
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v3
+
+    - name: Install HTTrack
+      run: sudo apt-get update && sudo apt-get install -y httrack
+
+    - name: Clean previous mirror (if any)
+      run: |
+        rm -rf httrack
+        mkdir -p httrack
+
+    - name: Run HTTrack
+      run: |
+        httrack "http://${DOMAIN}/" \
+          -O "httrack" "+*.${DOMAIN}/*" -v \
+          --footer "<!-- converted to GitHub Pages thanks to bit.ly/wp-github-pages -->"
+
+    - name: Move and clean files
+      run: |
+        mv httrack/${DOMAIN}/* ./
+        rm -rf httrack
+        find . -name '*.html' -exec sed -i 's%index.html%%g' {} \;
+        mv index.html home.html || true
+        rm -f index*.html *.php || true
+        mv home.html index.html || true
+
+    - name: Check for content changes
+      id: check_diff
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add --all
+        if git diff --cached --quiet; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+        else
+          echo "changed=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Commit and Push if changes
+      if: steps.check_diff.outputs.changed == 'true'
+      run: |
+        git commit -m "Auto-update from HTTrack on $(date -u '+%Y-%m-%d %H:%M')"
+        git push origin ${{ github.ref_name }}
+
