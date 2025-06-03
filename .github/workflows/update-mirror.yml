@@ -6,7 +6,6 @@ on:
   workflow_dispatch:     # Allow manual trigger
 
 env:
-  DOMAIN: sipe25.com
   BASE_URL: https://sipe25.com
   NEW_BASE_URL: https://ai-sf.it/sipe
 
@@ -20,19 +19,17 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@v4
 
+    - name: Load environment variables
+      run: |
+        source .env
+        echo "DOMAIN=$DOMAIN" >> $GITHUB_ENV
+
     - name: Install HTTrack
       run: sudo apt-get update && sudo apt-get install -y httrack
 
     - name: Run HTTrack
       run: |
-        httrack "https://${DOMAIN}/" \
-          --skeleton \
-          --mirror \
-          --stay-on-same-address \
-          --depth=3 \
-          -O "httrack" "+*.${DOMAIN}/*" -v
-        mkdir -p mirror-site
-        mv httrack/${DOMAIN}/* mirror-site/
+        bash scripts/download_mirror.sh "${{ env.DOMAIN }}" "mirror-site" 3
 
     - name: Upload mirror artifact
       uses: actions/upload-artifact@v4
