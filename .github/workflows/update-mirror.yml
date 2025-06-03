@@ -5,24 +5,22 @@ on:
     - cron: '0 3 * * *'  # Every day at 03:00 UTC
   workflow_dispatch:     # Allow manual trigger
 
+env:
+  DOMAIN: sipe25.com
+  BASE_URL: https://sipe25.com
+
 jobs:
-  mirror:
+
+  httrack:
     runs-on: ubuntu-latest
-
-    env:
-      DOMAIN: sipe25.com
-
+    outputs:
+      artifact-name: mirror-site
     steps:
     - name: Checkout the repository
       uses: actions/checkout@v3
 
     - name: Install HTTrack
       run: sudo apt-get update && sudo apt-get install -y httrack
-
-    - name: Clean previous mirror (if any)
-      run: |
-        rm -rf httrack
-        mkdir -p httrack
 
     - name: Run HTTrack
       run: |
@@ -31,28 +29,145 @@ jobs:
 
     - name: Move and clean files
       run: |
-        mv httrack/${DOMAIN}/* ./
+        mv httrack/${DOMAIN}/* mirror-site
         rm -rf httrack
+        cd mirror-site || exit 1
         find . -name '*.html' -exec sed -i 's%index.html%%g' {} \;
         mv index.html home.html || true
         rm -f index*.html *.php || true
         mv home.html index.html || true
 
-    - name: Check for content changes
-      id: check_diff
+    - name: Upload mirror artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: mirror-site
+        path: mirror-site
+
+  fix_links:
+    needs: httrack
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v3
+
+    - name: Download mirror artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: mirror-site
+        path: mirror-site
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install Python dependencies
+      run: pip install requests beautifulsoup4
+
+    - name: Create fix_page_id_links.py script
+      run: |
+          cat > fix_page_id_links.py << 'EOF'
+          import os
+          import re
+          import requests
+          from bs4 import BeautifulSoup
+
+          BASE_URL = "${{ env.BASE_URL }}"
+
+          def find_and_fix_page_id_links(file_path):
+              with open(file_path, "r", encoding="utf-8") as f:
+                  html = f.read()
+
+              soup = BeautifulSoup(html, "html.parser")
+              changed = False
+
+              page_id_links = soup.find_all("a", href=re.compile(r"page_id=\\d+"))
+
+              for a in page_id_links:
+                  href = a["href"]
+                  match = re.search(r"page_id=(\\d+)", href)
+                  if not match:
+                      continue
+                  page_id = match.group(1)
+                  test_url = f"{BASE_URL}/?page_id={page_id}"
+
+                  try:
+                      r = requests.head(test_url, allow_redirects=True, timeout=5)
+                      final_url = r.url
+
+                      if final_url != test_url:
+                          if final_url.startswith(BASE_URL):
+                              final_url = final_url[len(BASE_URL):]
+                              if final_url.startswith("/"):
+                                  final_url = final_url[1:]
+                          print(f"Fixing {href} --> {final_url}")
+                          a["href"] = final_url
+                          changed = True
+
+                  except Exception as e:
+                      print(f"Warning: Failed to fetch {test_url}: {e}")
+
+              if changed:
+                  with open(file_path, "w", encoding="utf-8") as f:
+                      f.write(str(soup))
+                  print(f"Updated {file_path}")
+
+          def main():
+              root_dir = "./mirror-site"
+              for dirpath, _, filenames in os.walk(root_dir):
+                  for filename in filenames:
+                      if filename.endswith(".html"):
+                          filepath = os.path.join(dirpath, filename)
+                          find_and_fix_page_id_links(filepath)
+
+          if __name__ == "__main__":
+              main()
+          EOF
+
+    - name: Run link fixing script
+      run: |
+        cd mirror-site || exit 1
+        python fix_page_id_links.py
+
+    - name: Upload fixed mirror artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: fixed-mirror-site
+        path: mirror-site
+
+  commit_and_push:
+    needs: fix_links
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Ensure we can push changes
+
+    - name: Download fixed mirror artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: fixed-mirror-site
+        path: mirror-site
+
+    - name: Move fixed files to root
+      run: |
+        rsync -a --delete mirror-site/ ./
+        rm -rf mirror-site
+
+    - name: Configure Git
       run: |
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
+
+    - name: Commit and push changes if any
+      run: |
         git add --all
         if git diff --cached --quiet; then
-          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "No changes to commit"
         else
-          echo "changed=true" >> $GITHUB_OUTPUT
+          git commit -m "Auto-update on $(date -u '+%Y-%m-%d %H:%M')"
+          git push origin ${{ github.ref_name }}
         fi
 
-    - name: Commit and Push if changes
-      if: steps.check_diff.outputs.changed == 'true'
-      run: |
-        git commit -m "Auto-update from HTTrack on $(date -u '+%Y-%m-%d %H:%M')"
-        git push origin ${{ github.ref_name }}
 
