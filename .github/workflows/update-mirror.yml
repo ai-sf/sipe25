@@ -86,11 +86,11 @@ jobs:
               soup = BeautifulSoup(html, "html.parser")
               changed = False
 
-              page_id_links = soup.find_all("a", href=re.compile(r"page_id=\\d+"))
+              page_id_links = soup.find_all("a", href=re.compile(r"page_id=\d+"))
 
               for a in page_id_links:
                   href = a["href"]
-                  match = re.search(r"page_id=(\\d+)", href)
+                  match = re.search(r"page_id=(\d+)", href)
                   if not match:
                       continue
                   page_id = match.group(1)
@@ -121,7 +121,6 @@ jobs:
               root_dir = "./mirror-site"
               for dirpath, _, filenames in os.walk(root_dir):
                   for filename in filenames:
-                      print(f"Processing {filename} in {dirpath}")
                       if filename.endswith(".html"):
                           filepath = os.path.join(dirpath, filename)
                           find_and_fix_page_id_links(filepath)
