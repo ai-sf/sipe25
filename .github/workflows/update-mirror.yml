@@ -30,17 +30,8 @@ jobs:
           --stay-on-same-address \
           --depth=3 \
           -O "httrack" "+*.${DOMAIN}/*" -v
-
-    - name: Move and clean files
-      run: |
         mkdir -p mirror-site
         mv httrack/${DOMAIN}/* mirror-site/
-        rm -rf httrack
-        cd mirror-site || exit 1
-        find . -name '*.html' -exec sed -i 's%index.html%%g' {} \;
-        mv index.html home.html || true
-        rm -f index*.html *.php || true
-        mv home.html index.html || true
 
     - name: Upload mirror artifact
       uses: actions/upload-artifact@v4
@@ -53,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Download mirror artifact
       uses: actions/download-artifact@v4
@@ -67,71 +58,12 @@ jobs:
         python-version: '3.x'
 
     - name: Install Python dependencies
-      run: pip install requests beautifulsoup4
+      run: pip install -r requirements.txt
 
-    - name: Create fix_page_id_links.py script
+    - name: Run cleanup and fixing script
       run: |
-          cat > fix_page_id_links.py << 'EOF'
-          import os
-          import re
-          import requests
-          from bs4 import BeautifulSoup
-
-          BASE_URL = "${{ env.BASE_URL }}"
-
-          def find_and_fix_page_id_links(file_path):
-              with open(file_path, "r", encoding="utf-8") as f:
-                  html = f.read()
-
-              soup = BeautifulSoup(html, "html.parser")
-              changed = False
-
-              page_id_links = soup.find_all("a", href=re.compile(r"page_id=\d+"))
-
-              for a in page_id_links:
-                  href = a["href"]
-                  match = re.search(r"page_id=(\d+)", href)
-                  if not match:
-                      continue
-                  page_id = match.group(1)
-                  test_url = f"{BASE_URL}/?page_id={page_id}"
-
-                  try:
-                      r = requests.head(test_url, allow_redirects=True, timeout=5)
-                      final_url = r.url
-
-                      if final_url != test_url:
-                          if final_url.startswith(BASE_URL):
-                              final_url = final_url[len(BASE_URL):]
-                              if final_url.startswith("/"):
-                                  final_url = final_url[1:]
-                          print(f"Fixing {href} --> {final_url}")
-                          a["href"] = final_url
-                          changed = True
-
-                  except Exception as e:
-                      print(f"Warning: Failed to fetch {test_url}: {e}")
-
-              if changed:
-                  with open(file_path, "w", encoding="utf-8") as f:
-                      f.write(str(soup))
-                  print(f"Updated {file_path}")
-
-          def main():
-              root_dir = "./mirror-site"
-              for dirpath, _, filenames in os.walk(root_dir):
-                  for filename in filenames:
-                      if filename.endswith(".html"):
-                          filepath = os.path.join(dirpath, filename)
-                          find_and_fix_page_id_links(filepath)
-
-          if __name__ == "__main__":
-              main()
-          EOF
-
-    - name: Run link fixing script
-      run: |
-        python fix_page_id_links.py
+        python scripts/index_cleanup.py mirror-site
+        python scripts/fix_links.py mirror-site "${{ env.BASE_URL }}"
 
     - name: Upload fixed mirror artifact
       uses: actions/upload-artifact@v4
@@ -142,11 +74,13 @@ jobs:
   commit_and_push:
     needs: fix_links
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0  # Ensure we can push changes
+      uses: actions/checkout@v4
 
     - name: Download fixed mirror artifact
       uses: actions/download-artifact@v4
@@ -154,11 +88,16 @@ jobs:
         name: fixed-mirror-site
         path: public
 
-    - name: Publish in GitHub Pages
-      uses: peaceiris/actions-gh-pages@v4
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: public
-        publish_branch: gh-pages
-        publish_force: true
+        path: public
+    
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
 
