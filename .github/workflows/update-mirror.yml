@@ -38,7 +38,7 @@ jobs:
         mv home.html index.html || true
 
     - name: Upload mirror artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: mirror-site
         path: mirror-site
@@ -51,7 +51,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Download mirror artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: mirror-site
         path: mirror-site
@@ -130,7 +130,7 @@ jobs:
         python fix_page_id_links.py
 
     - name: Upload fixed mirror artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: fixed-mirror-site
         path: mirror-site
@@ -145,7 +145,7 @@ jobs:
         fetch-depth: 0  # Ensure we can push changes
 
     - name: Download fixed mirror artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: fixed-mirror-site
         path: mirror-site
