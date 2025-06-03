@@ -26,9 +26,8 @@ jobs:
 
     - name: Run HTTrack
       run: |
-        httrack "http://${DOMAIN}/" \
-          -O "httrack" "+*.${DOMAIN}/*" -v \
-          --footer "<!-- converted to GitHub Pages thanks to bit.ly/wp-github-pages -->"
+        httrack "https://${DOMAIN}/" \
+          -O "httrack" "+*.${DOMAIN}/*" -v
 
     - name: Move and clean files
       run: |
