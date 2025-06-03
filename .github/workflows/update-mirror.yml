@@ -5,12 +5,7 @@ on:
     - cron: '0 3 * * *'  # Every day at 03:00 UTC
   workflow_dispatch:     # Allow manual trigger
 
-env:
-  BASE_URL: https://sipe25.com
-  NEW_BASE_URL: https://ai-sf.it/sipe
-
 jobs:
-
   httrack:
     runs-on: ubuntu-latest
     outputs:
@@ -43,6 +38,12 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@v4
+
+    - name: Load environment variables
+      run: |
+        source .env
+        echo "BASE_URL=$BASE_URL" >> $GITHUB_ENV
+        echo "NEW_BASE_URL=$NEW_BASE_URL" >> $GITHUB_ENV
 
     - name: Download mirror artifact
       uses: actions/download-artifact@v4
