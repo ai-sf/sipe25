@@ -153,26 +153,13 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: fixed-mirror-site
-        path: mirror-site
+        path: public
 
-    - name: Move fixed files to root
-      run: |
-        rsync -a --delete mirror-site/ ./
-        rm -rf mirror-site
-
-    - name: Configure Git
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-
-    - name: Commit and push changes if any
-      run: |
-        git add --all
-        if git diff --cached --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "Auto-update on $(date -u '+%Y-%m-%d %H:%M')"
-          git push origin ${{ github.ref_name }}
-        fi
-
+    - name: Publish in GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: public
+        publish_branch: gh-pages
+        publish_force: true
 
