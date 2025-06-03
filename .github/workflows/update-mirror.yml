@@ -132,7 +132,7 @@ jobs:
     - name: Run link fixing script
       run: |
         cd mirror-site || exit 1
-        python fix_page_id_links.py
+        python ../fix_page_id_links.py
 
     - name: Upload fixed mirror artifact
       uses: actions/upload-artifact@v4
