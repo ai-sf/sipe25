@@ -79,8 +79,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     permissions:
-      contents: read
-      pages: write
+      contents: write
       id-token: write
 
     steps:
@@ -93,17 +92,6 @@ jobs:
         name: fixed-mirror-site
         path: public
 
-    #- name: Setup Pages
-    #  uses: actions/configure-pages@v5
-
-    #- name: Upload artifact
-    #  uses: actions/upload-pages-artifact@v3
-    #  with:
-    #    path: public
-    
-    #- name: Deploy to GitHub Pages
-    #  id: deployment
-    #  uses: actions/deploy-pages@v4
     - name: Publish in GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
       with:
