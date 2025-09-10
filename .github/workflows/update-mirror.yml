@@ -98,6 +98,8 @@ jobs:
       with:
         target: wp-content/ # directory to look for images in
         dimensions: 1024 # parameter to change size, passed to mogrify as ``
+        widthLimit: 1024 # max width to check
+        heightLimit: 768 # max height to check
 
     - name: Publish in GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
