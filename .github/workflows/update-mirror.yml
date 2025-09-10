@@ -92,6 +92,13 @@ jobs:
         name: fixed-mirror-site
         path: public
 
+    - name: Resize images above 1024 width
+      id: resize-images
+      uses: petems/image-resizer-gh-action@master
+      with:
+        target: wp-content/ # directory to look for images in
+        dimensions: 1024 # parameter to change size, passed to mogrify as ``
+
     - name: Publish in GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
       with:
