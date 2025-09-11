@@ -24,7 +24,7 @@ jobs:
 
     - name: Run HTTrack
       run: |
-        bash scripts/download_mirror.sh "${{ env.DOMAIN }}" "mirror-site" 3
+        bash scripts/download_mirror.sh "${{ env.DOMAIN }}" "mirror-site" 5
 
     - name: Upload mirror artifact
       uses: actions/upload-artifact@v4
