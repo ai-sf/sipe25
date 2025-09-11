@@ -35,6 +35,13 @@ def fix_page_id_links(soup, base_url, new_base_url):
             print(f"Warning: Failed to fetch {test_url}: {e}")
     return changed
 
+def fix_scrset_links(soup):
+    changed = False
+    for img in soup.find_all("img", srcset=True):
+        del img["srcset"]
+        changed = True
+    return changed
+
 def process_file(file_path, base_url, new_base_url):
     with open(file_path, "r", encoding="utf-8") as f:
         html = f.read()
@@ -44,6 +51,7 @@ def process_file(file_path, base_url, new_base_url):
 
     changed |= remove_index_html_links(soup)
     changed |= fix_page_id_links(soup, base_url, new_base_url)
+    changed |= fix_scrset_links(soup)
 
     if changed:
         with open(file_path, "w", encoding="utf-8") as f:
