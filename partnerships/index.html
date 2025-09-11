@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+
+<html lang="it-IT">
+<!-- Mirrored from sipe25.com/partnerships/ by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 11 Sep 2025 14:49:07 GMT -->
+<!-- Added by HTTrack --><meta content="text/html;charset=utf-8" http-equiv="content-type"/><!-- /Added by HTTrack -->
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="max-image-preview:large" name="robots"/>
+<!-- Async WordPress.com Remote Login -->
+<script id="wpcom_remote_login_js">
+var wpcom_remote_login_extra_auth = '';
+function wpcom_remote_login_remove_dom_node_id( element_id ) {
+	var dom_node = document.getElementById( element_id );
+	if ( dom_node ) { dom_node.parentNode.removeChild( dom_node ); }
+}
+function wpcom_remote_login_remove_dom_node_classes( class_name ) {
+	var dom_nodes = document.querySelectorAll( '.' + class_name );
+	for ( var i = 0; i < dom_nodes.length; i++ ) {
+		dom_nodes[ i ].parentNode.removeChild( dom_nodes[ i ] );
+	}
+}
+function wpcom_remote_login_final_cleanup() {
+	wpcom_remote_login_remove_dom_node_classes( "wpcom_remote_login_msg" );
+	wpcom_remote_login_remove_dom_node_id( "wpcom_remote_login_key" );
+	wpcom_remote_login_remove_dom_node_id( "wpcom_remote_login_validate" );
+	wpcom_remote_login_remove_dom_node_id( "wpcom_remote_login_js" );
+	wpcom_remote_login_remove_dom_node_id( "wpcom_request_access_iframe" );
+	wpcom_remote_login_remove_dom_node_id( "wpcom_request_access_styles" );
+}
+
+// Watch for messages back from the remote login
+window.addEventListener( "message", function( e ) {
+	if ( e.origin === "https://r-login.wordpress.com/" ) {
+		var data = {};
+		try {
+			data = JSON.parse( e.data );
+		} catch( e ) {
+			wpcom_remote_login_final_cleanup();
+			return;
+		}
+
+		if ( data.msg === 'LOGIN' ) {
+			// Clean up the login check iframe
+			wpcom_remote_login_remove_dom_node_id( "wpcom_remote_login_key" );
+
+			var id_regex = new RegExp( /^[0-9]+$/ );
+			var token_regex = new RegExp( /^.*|.*|.*$/ );
+			if (
+				token_regex.test( data.token )
+				&& id_regex.test( data.wpcomid )
+			) {
+				// We have everything we need to ask for a login
+				var script = document.createElement( "script" );
+				script.setAttribute( "id", "wpcom_remote_login_validate" );
+				script.src = '../remote-login4f98.html?wpcom_remote_login=validate'
+					+ '&wpcomid=' + data.wpcomid
+					+ '&token=' + encodeURIComponent( data.token )
+					+ '&host=' + window.location.protocol
+					+ '//' + window.location.hostname
+					+ '&postid=39'
+					+ '&is_singular=';
+				document.body.appendChild( script );
+			}
+
+			return;
+		}
+
+		// Safari ITP, not logged in, so redirect
+		if ( data.msg === 'LOGIN-REDIRECT' ) {
+			window.location = 'https://wordpress.com/log-in?redirect_to=' + window.location.href;
+			return;
+		}
+
+		// Safari ITP, storage access failed, remove the request
+		if ( data.msg === 'LOGIN-REMOVE' ) {
+			var css_zap = 'html { -webkit-transition: margin-top 1s; transition: margin-top 1s; } /* 9001 */ html { margin-top: 0 !important; } * html body { margin-top: 0 !important; } @media screen and ( max-width: 782px ) { html { margin-top: 0 !important; } * html body { margin-top: 0 !important; } }';
+			var style_zap = document.createElement( 'style' );
+			style_zap.type = 'text/css';
+			style_zap.appendChild( document.createTextNode( css_zap ) );
+			document.body.appendChild( style_zap );
+
+			var e = document.getElementById( 'wpcom_request_access_iframe' );
+			e.parentNode.removeChild( e );
+
+			document.cookie = 'wordpress_com_login_access=denied; path=/; max-age=31536000';
+
+			return;
+		}
+
+		// Safari ITP
+		if ( data.msg === 'REQUEST_ACCESS' ) {
+			console.log( 'request access: safari' );
+
+			// Check ITP iframe enable/disable knob
+			if ( wpcom_remote_login_extra_auth !== 'safari_itp_iframe' ) {
+				return;
+			}
+
+			// If we are in a "private window" there is no ITP.
+			var private_window = false;
+			try {
+				var opendb = window.openDatabase( null, null, null, null );
+			} catch( e ) {
+				private_window = true;
+			}
+
+			if ( private_window ) {
+				console.log( 'private window' );
+				return;
+			}
+
+			var iframe = document.createElement( 'iframe' );
+			iframe.id = 'wpcom_request_access_iframe';
+			iframe.setAttribute( 'scrolling', 'no' );
+			iframe.setAttribute( 'sandbox', 'allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-top-navigation-by-user-activation' );
+			iframe.src = 'https://r-login.wordpress.com/remote-login.php?wpcom_remote_login=request_access&amp;origin=' + encodeURIComponent( data.origin ) + '&wpcomid=' + encodeURIComponent( data.wpcomid );
+
+			var css = 'html { -webkit-transition: margin-top 1s; transition: margin-top 1s; } /* 9001 */ html { margin-top: 46px !important; } * html body { margin-top: 46px !important; } @media screen and ( max-width: 660px ) { html { margin-top: 71px !important; } * html body { margin-top: 71px !important; } #wpcom_request_access_iframe { display: block; height: 71px !important; } } #wpcom_request_access_iframe { border: 0px; height: 46px; position: fixed; top: 0; left: 0; width: 100%; min-width: 100%; z-index: 99999; background: #23282d; } ';
+
+			var style = document.createElement( 'style' );
+			style.type = 'text/css';
+			style.id = 'wpcom_request_access_styles';
+			style.appendChild( document.createTextNode( css ) );
+			document.body.appendChild( style );
+
+			document.body.appendChild( iframe );
+		}
+
+		if ( data.msg === 'DONE' ) {
+			wpcom_remote_login_final_cleanup();
+		}
+	}
+}, false );
+
+// Inject the remote login iframe after the page has had a chance to load
+// more critical resources
+window.addEventListener( "DOMContentLoaded", function( e ) {
+	var iframe = document.createElement( "iframe" );
+	iframe.style.display = "none";
+	iframe.setAttribute( "scrolling", "no" );
+	iframe.setAttribute( "id", "wpcom_remote_login_key" );
+	iframe.src = "https://r-login.wordpress.com/remote-login.php"
+		+ "?wpcom_remote_login=key"
+		+ "&origin=aHR0cHM6Ly9zaXBlMjUuY29t"
+		+ "&wpcomid=242551851"
+		+ "&time=1757561412";
+	document.body.appendChild( iframe );
+}, false );
+</script>
+<title>Partnerships</title>
+<link href="http://s1.wp.com/" rel="dns-prefetch"/>
+<link href="http://s2.wp.com/" rel="dns-prefetch"/>
+<link href="http://s0.wp.com/" rel="dns-prefetch"/>
+<link href="http://wordpress.com/" rel="dns-prefetch"/>
+<link href="../feed/index.html" rel="alternate" title=" » Feed" type="application/rss+xml"/>
+<link href="../comments/feed/index.html" rel="alternate" title=" » Feed dei commenti" type="application/rss+xml"/>
+<script type="text/javascript">
+		/* <![CDATA[ */
+		function addLoadEvent(func) {
+			var oldonload = window.onload;
+			if (typeof window.onload != 'function') {
+				window.onload = func;
+			} else {
+				window.onload = function () {
+					oldonload();
+					func();
+				}
+			}
+		}
+		/* ]]> */
+	</script>
+<script>
+window._wpemojiSettings = {"baseUrl":"https:\/\/s0.wp.com\/wp-content\/mu-plugins\/wpcom-smileys\/twemoji\/2\/72x72\/","ext":".png","svgUrl":"https:\/\/s0.wp.com\/wp-content\/mu-plugins\/wpcom-smileys\/twemoji\/2\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/s2.wp.com\/wp-includes\/js\/wp-emoji-release.min.js?m=1751981882i&ver=6.8.2-alpha-60439"}};
+/*! This file is auto-generated */
+!function(s,n){var o,i,e;function c(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(o,JSON.stringify(t))}catch(e){}}function p(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data),a=(e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0),new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data));return t.every(function(e,t){return e===a[t]})}function u(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);for(var n=e.getImageData(16,16,1,1),a=0;a<n.data.length;a++)if(0!==n.data[a])return!1;return!0}function f(e,t,n,a){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!a(e,"\ud83e\udedf")}return!1}function g(e,t,n,a){var r="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):s.createElement("canvas"),o=r.getContext("2d",{willReadFrequently:!0}),i=(o.textBaseline="top",o.font="600 32px Arial",{});return e.forEach(function(e){i[e]=t(o,e,n,a)}),i}function t(e){var t=s.createElement("script");t.src=e,t.defer=!0,s.head.appendChild(t)}"undefined"!=typeof Promise&&(o="wpEmojiSettingsSupports",i=["flag","emoji"],n.supports={everything:!0,everythingExceptFlag:!0},e=new Promise(function(e){s.addEventListener("DOMContentLoaded",e,{once:!0})}),new Promise(function(t){var n=function(){try{var e=JSON.parse(sessionStorage.getItem(o));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+g.toString()+"("+[JSON.stringify(i),f.toString(),p.toString(),u.toString()].join(",")+"));",a=new Blob([e],{type:"text/javascript"}),r=new Worker(URL.createObjectURL(a),{name:"wpTestEmojiSupports"});return void(r.onmessage=function(e){c(n=e.data),r.terminate(),t(n)})}catch(e){}c(n=g(i,f,p,u))}t(n)}).then(function(e){for(var t in e)n.supports[t]=e[t],n.supports.everything=n.supports.everything&&n.supports[t],"flag"!==t&&(n.supports.everythingExceptFlag=n.supports.everythingExceptFlag&&n.supports[t]);n.supports.everythingExceptFlag=n.supports.everythingExceptFlag&&!n.supports.flag,n.DOMReady=!1,n.readyCallback=function(){n.DOMReady=!0}}).then(function(){return e}).then(function(){var e;n.supports.everything||(n.readyCallback(),(e=n.source||{}).concatemoji?t(e.concatemoji):e.wpemoji&&e.twemoji&&(t(e.twemoji),t(e.wpemoji)))}))}((window,document),window._wpemojiSettings);
+</script>
+<link crossorigin="anonymous" href="https://s0.wp.com/wp-content/mu-plugins/jetpack-plugin/moon/modules/related-posts/related-posts.css?m=1753284714i&amp;cssminify=yes" id="all-css-0-1" media="all" rel="stylesheet" type="text/css"/>
+<style id="wp-block-site-logo-inline-css">
+.wp-block-site-logo{box-sizing:border-box;line-height:0}.wp-block-site-logo a{display:inline-block;line-height:0}.wp-block-site-logo.is-default-size img{height:auto;width:120px}.wp-block-site-logo img{height:auto;max-width:100%}.wp-block-site-logo a,.wp-block-site-logo img{border-radius:inherit}.wp-block-site-logo.aligncenter{margin-left:auto;margin-right:auto;text-align:center}:root :where(.wp-block-site-logo.is-style-rounded){border-radius:9999px}
+</style>
+<style id="wp-block-group-inline-css">
+.wp-block-group{box-sizing:border-box}:where(.wp-block-group.wp-block-group-is-layout-constrained){position:relative}
+</style>
+<style id="wp-block-paragraph-inline-css">
+.is-small-text{font-size:.875em}.is-regular-text{font-size:1em}.is-large-text{font-size:2.25em}.is-larger-text{font-size:3em}.has-drop-cap:not(:focus):first-letter{float:left;font-size:8.4em;font-style:normal;font-weight:100;line-height:.68;margin:.05em .1em 0 0;text-transform:uppercase}body.rtl .has-drop-cap:not(:focus):first-letter{float:none;margin-left:.1em}p.has-drop-cap.has-background{overflow:hidden}:root :where(p.has-background){padding:1.25em 2.375em}:where(p.has-text-color:not(.has-link-color)) a{color:inherit}p.has-text-align-left[style*="writing-mode:vertical-lr"],p.has-text-align-right[style*="writing-mode:vertical-rl"]{rotate:180deg}
+</style>
+<style id="wp-block-image-inline-css">
+.wp-block-image>a,.wp-block-image>figure>a{display:inline-block}.wp-block-image img{box-sizing:border-box;height:auto;max-width:100%;vertical-align:bottom}@media not (prefers-reduced-motion){.wp-block-image img.hide{visibility:hidden}.wp-block-image img.show{animation:show-content-image .4s}}.wp-block-image[style*=border-radius] img,.wp-block-image[style*=border-radius]>a{border-radius:inherit}.wp-block-image.has-custom-border img{box-sizing:border-box}.wp-block-image.aligncenter{text-align:center}.wp-block-image.alignfull>a,.wp-block-image.alignwide>a{width:100%}.wp-block-image.alignfull img,.wp-block-image.alignwide img{height:auto;width:100%}.wp-block-image .aligncenter,.wp-block-image .alignleft,.wp-block-image .alignright,.wp-block-image.aligncenter,.wp-block-image.alignleft,.wp-block-image.alignright{display:table}.wp-block-image .aligncenter>figcaption,.wp-block-image .alignleft>figcaption,.wp-block-image .alignright>figcaption,.wp-block-image.aligncenter>figcaption,.wp-block-image.alignleft>figcaption,.wp-block-image.alignright>figcaption{caption-side:bottom;display:table-caption}.wp-block-image .alignleft{float:left;margin:.5em 1em .5em 0}.wp-block-image .alignright{float:right;margin:.5em 0 .5em 1em}.wp-block-image .aligncenter{margin-left:auto;margin-right:auto}.wp-block-image :where(figcaption){margin-bottom:1em;margin-top:.5em}.wp-block-image.is-style-circle-mask img{border-radius:9999px}@supports ((-webkit-mask-image:none) or (mask-image:none)) or (-webkit-mask-image:none){.wp-block-image.is-style-circle-mask img{border-radius:0;-webkit-mask-image:url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50"/></svg>');mask-image:url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50"/></svg>');mask-mode:alpha;-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain}}:root :where(.wp-block-image.is-style-rounded img,.wp-block-image .is-style-rounded img){border-radius:9999px}.wp-block-image figure{margin:0}.wp-lightbox-container{display:flex;flex-direction:column;position:relative}.wp-lightbox-container img{cursor:zoom-in}.wp-lightbox-container img:hover+button{opacity:1}.wp-lightbox-container button{align-items:center;-webkit-backdrop-filter:blur(16px) saturate(180%);backdrop-filter:blur(16px) saturate(180%);background-color:#5a5a5a40;border:none;border-radius:4px;cursor:zoom-in;display:flex;height:20px;justify-content:center;opacity:0;padding:0;position:absolute;right:16px;text-align:center;top:16px;width:20px;z-index:100}@media not (prefers-reduced-motion){.wp-lightbox-container button{transition:opacity .2s ease}}.wp-lightbox-container button:focus-visible{outline:3px auto #5a5a5a40;outline:3px auto -webkit-focus-ring-color;outline-offset:3px}.wp-lightbox-container button:hover{cursor:pointer;opacity:1}.wp-lightbox-container button:focus{opacity:1}.wp-lightbox-container button:focus,.wp-lightbox-container button:hover,.wp-lightbox-container button:not(:hover):not(:active):not(.has-background){background-color:#5a5a5a40;border:none}.wp-lightbox-overlay{box-sizing:border-box;cursor:zoom-out;height:100vh;left:0;overflow:hidden;position:fixed;top:0;visibility:hidden;width:100%;z-index:100000}.wp-lightbox-overlay .close-button{align-items:center;cursor:pointer;display:flex;justify-content:center;min-height:40px;min-width:40px;padding:0;position:absolute;right:calc(env(safe-area-inset-right) + 16px);top:calc(env(safe-area-inset-top) + 16px);z-index:5000000}.wp-lightbox-overlay .close-button:focus,.wp-lightbox-overlay .close-button:hover,.wp-lightbox-overlay .close-button:not(:hover):not(:active):not(.has-background){background:none;border:none}.wp-lightbox-overlay .lightbox-image-container{height:var(--wp--lightbox-container-height);left:50%;overflow:hidden;position:absolute;top:50%;transform:translate(-50%,-50%);transform-origin:top left;width:var(--wp--lightbox-container-width);z-index:9999999999}.wp-lightbox-overlay .wp-block-image{align-items:center;box-sizing:border-box;display:flex;height:100%;justify-content:center;margin:0;position:relative;transform-origin:0 0;width:100%;z-index:3000000}.wp-lightbox-overlay .wp-block-image img{height:var(--wp--lightbox-image-height);min-height:var(--wp--lightbox-image-height);min-width:var(--wp--lightbox-image-width);width:var(--wp--lightbox-image-width)}.wp-lightbox-overlay .wp-block-image figcaption{display:none}.wp-lightbox-overlay button{background:none;border:none}.wp-lightbox-overlay .scrim{background-color:#fff;height:100%;opacity:.9;position:absolute;width:100%;z-index:2000000}.wp-lightbox-overlay.active{visibility:visible}@media not (prefers-reduced-motion){.wp-lightbox-overlay.active{animation:turn-on-visibility .25s both}.wp-lightbox-overlay.active img{animation:turn-on-visibility .35s both}.wp-lightbox-overlay.show-closing-animation:not(.active){animation:turn-off-visibility .35s both}.wp-lightbox-overlay.show-closing-animation:not(.active) img{animation:turn-off-visibility .25s both}.wp-lightbox-overlay.zoom.active{animation:none;opacity:1;visibility:visible}.wp-lightbox-overlay.zoom.active .lightbox-image-container{animation:lightbox-zoom-in .4s}.wp-lightbox-overlay.zoom.active .lightbox-image-container img{animation:none}.wp-lightbox-overlay.zoom.active .scrim{animation:turn-on-visibility .4s forwards}.wp-lightbox-overlay.zoom.show-closing-animation:not(.active){animation:none}.wp-lightbox-overlay.zoom.show-closing-animation:not(.active) .lightbox-image-container{animation:lightbox-zoom-out .4s}.wp-lightbox-overlay.zoom.show-closing-animation:not(.active) .lightbox-image-container img{animation:none}.wp-lightbox-overlay.zoom.show-closing-animation:not(.active) .scrim{animation:turn-off-visibility .4s forwards}}@keyframes show-content-image{0%{visibility:hidden}99%{visibility:hidden}to{visibility:visible}}@keyframes turn-on-visibility{0%{opacity:0}to{opacity:1}}@keyframes turn-off-visibility{0%{opacity:1;visibility:visible}99%{opacity:0;visibility:visible}to{opacity:0;visibility:hidden}}@keyframes lightbox-zoom-in{0%{transform:translate(calc((-100vw + var(--wp--lightbox-scrollbar-width))/2 + var(--wp--lightbox-initial-left-position)),calc(-50vh + var(--wp--lightbox-initial-top-position))) scale(var(--wp--lightbox-scale))}to{transform:translate(-50%,-50%) scale(1)}}@keyframes lightbox-zoom-out{0%{transform:translate(-50%,-50%) scale(1);visibility:visible}99%{visibility:visible}to{transform:translate(calc((-100vw + var(--wp--lightbox-scrollbar-width))/2 + var(--wp--lightbox-initial-left-position)),calc(-50vh + var(--wp--lightbox-initial-top-position))) scale(var(--wp--lightbox-scale));visibility:hidden}}
+</style>
+<style id="wp-block-columns-inline-css">
+.wp-block-columns{align-items:normal!important;box-sizing:border-box;display:flex;flex-wrap:wrap!important}@media (min-width:782px){.wp-block-columns{flex-wrap:nowrap!important}}.wp-block-columns.are-vertically-aligned-top{align-items:flex-start}.wp-block-columns.are-vertically-aligned-center{align-items:center}.wp-block-columns.are-vertically-aligned-bottom{align-items:flex-end}@media (max-width:781px){.wp-block-columns:not(.is-not-stacked-on-mobile)>.wp-block-column{flex-basis:100%!important}}@media (min-width:782px){.wp-block-columns:not(.is-not-stacked-on-mobile)>.wp-block-column{flex-basis:0;flex-grow:1}.wp-block-columns:not(.is-not-stacked-on-mobile)>.wp-block-column[style*=flex-basis]{flex-grow:0}}.wp-block-columns.is-not-stacked-on-mobile{flex-wrap:nowrap!important}.wp-block-columns.is-not-stacked-on-mobile>.wp-block-column{flex-basis:0;flex-grow:1}.wp-block-columns.is-not-stacked-on-mobile>.wp-block-column[style*=flex-basis]{flex-grow:0}:where(.wp-block-columns){margin-bottom:1.75em}:where(.wp-block-columns.has-background){padding:1.25em 2.375em}.wp-block-column{flex-grow:1;min-width:0;overflow-wrap:break-word;word-break:break-word}.wp-block-column.is-vertically-aligned-top{align-self:flex-start}.wp-block-column.is-vertically-aligned-center{align-self:center}.wp-block-column.is-vertically-aligned-bottom{align-self:flex-end}.wp-block-column.is-vertically-aligned-stretch{align-self:stretch}.wp-block-column.is-vertically-aligned-bottom,.wp-block-column.is-vertically-aligned-center,.wp-block-column.is-vertically-aligned-top{width:100%}
+</style>
+<style id="wp-block-navigation-link-inline-css">
+.wp-block-navigation .wp-block-navigation-item__label{overflow-wrap:break-word}.wp-block-navigation .wp-block-navigation-item__description{display:none}.link-ui-tools{border-top:1px solid #f0f0f0;padding:8px}.link-ui-block-inserter{padding-top:8px}.link-ui-block-inserter__back{margin-left:8px;text-transform:uppercase}
+</style>
+<link crossorigin="anonymous" href="https://s1.wp.com/wp-content/plugins/gutenberg-core/v20.6.0/build/block-library/blocks/navigation/style.css?m=1744959081i&amp;cssminify=yes" id="all-css-14-1" media="all" rel="stylesheet" type="text/css"/>
+<style id="wp-block-post-title-inline-css">
+.wp-block-post-title{box-sizing:border-box;word-break:break-word}.wp-block-post-title :where(a){display:inline-block;font-family:inherit;font-size:inherit;font-style:inherit;font-weight:inherit;letter-spacing:inherit;line-height:inherit;text-decoration:inherit}
+</style>
+<style id="wp-block-heading-inline-css">
+h1.has-background,h2.has-background,h3.has-background,h4.has-background,h5.has-background,h6.has-background{padding:1.25em 2.375em}h1.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h1.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),h2.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h2.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),h3.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h3.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),h4.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h4.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),h5.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h5.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),h6.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h6.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]){rotate:180deg}
+</style>
+<style id="wp-block-spacer-inline-css">
+.wp-block-spacer{clear:both}
+</style>
+<link crossorigin="anonymous" href="https://s0.wp.com/_static/??-eJyNjMEKgzAQBX9Ifdha9CJ+StF1KdFkN7gJ+X0RbM89zjAMSqxJJbEkhFxHnz9ODBunONN+M4Kq4O2EsHil3WDFRT4aMqvw/yHomj0baD40G/tf9BXXcApj27+ej6Hr2247ASkBO20=&amp;cssminify=yes" id="all-css-22-1" media="all" rel="stylesheet" type="text/css"/>
+<style id="wp-block-post-content-inline-css">
+.wp-block-post-content{display:flow-root}
+</style>
+<style id="wp-block-comments-inline-css">
+.wp-block-post-comments{box-sizing:border-box}.wp-block-post-comments .alignleft{float:left}.wp-block-post-comments .alignright{float:right}.wp-block-post-comments .navigation:after{clear:both;content:"";display:table}.wp-block-post-comments .commentlist{clear:both;list-style:none;margin:0;padding:0}.wp-block-post-comments .commentlist .comment{min-height:2.25em;padding-left:3.25em}.wp-block-post-comments .commentlist .comment p{font-size:1em;line-height:1.8;margin:1em 0}.wp-block-post-comments .commentlist .children{list-style:none;margin:0;padding:0}.wp-block-post-comments .comment-author{line-height:1.5}.wp-block-post-comments .comment-author .avatar{border-radius:1.5em;display:block;float:left;height:2.5em;margin-right:.75em;margin-top:.5em;width:2.5em}.wp-block-post-comments .comment-author cite{font-style:normal}.wp-block-post-comments .comment-meta{font-size:.875em;line-height:1.5}.wp-block-post-comments .comment-meta b{font-weight:400}.wp-block-post-comments .comment-meta .comment-awaiting-moderation{display:block;margin-bottom:1em;margin-top:1em}.wp-block-post-comments .comment-body .commentmetadata{font-size:.875em}.wp-block-post-comments .comment-form-author label,.wp-block-post-comments .comment-form-comment label,.wp-block-post-comments .comment-form-email label,.wp-block-post-comments .comment-form-url label{display:block;margin-bottom:.25em}.wp-block-post-comments .comment-form input:not([type=submit]):not([type=checkbox]),.wp-block-post-comments .comment-form textarea{box-sizing:border-box;display:block;width:100%}.wp-block-post-comments .comment-form-cookies-consent{display:flex;gap:.25em}.wp-block-post-comments .comment-form-cookies-consent #wp-comment-cookies-consent{margin-top:.35em}.wp-block-post-comments .comment-reply-title{margin-bottom:0}.wp-block-post-comments .comment-reply-title :where(small){font-size:var(--wp--preset--font-size--medium,smaller);margin-left:.5em}.wp-block-post-comments .reply{font-size:.875em;margin-bottom:1.4em}.wp-block-post-comments input:not([type=submit]),.wp-block-post-comments textarea{border:1px solid #949494;font-family:inherit;font-size:1em}.wp-block-post-comments input:not([type=submit]):not([type=checkbox]),.wp-block-post-comments textarea{padding:calc(.667em + 2px)}:where(.wp-block-post-comments input[type=submit]){border:none}.wp-block-comments{box-sizing:border-box}
+</style>
+<style id="wp-block-library-inline-css">
+:root{--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,161;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px;--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color)}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root{--wp--preset--font-size--normal:16px;--wp--preset--font-size--huge:42px}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#020381,#2874fc)}.has-regular-font-size{font-size:1em}.has-larger-font-size{font-size:2.625em}.has-normal-font-size{font-size:var(--wp--preset--font-size--normal)}.has-huge-font-size{font-size:var(--wp--preset--font-size--huge)}.has-text-align-center{text-align:center}.has-text-align-left{text-align:left}.has-text-align-right{text-align:right}#end-resizable-editor-section{display:none}.aligncenter{clear:both}.items-justified-left{justify-content:flex-start}.items-justified-center{justify-content:center}.items-justified-right{justify-content:flex-end}.items-justified-space-between{justify-content:space-between}.screen-reader-text{word-wrap:normal!important;border:0;clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px}.screen-reader-text:focus{background-color:#ddd;clip-path:none;color:#444;display:block;font-size:1em;height:auto;left:5px;line-height:normal;padding:15px 23px 14px;text-decoration:none;top:5px;width:auto;z-index:100000}html :where(.has-border-color){border-style:solid}html :where([style*=border-top-color]){border-top-style:solid}html :where([style*=border-right-color]){border-right-style:solid}html :where([style*=border-bottom-color]){border-bottom-style:solid}html :where([style*=border-left-color]){border-left-style:solid}html :where([style*=border-width]){border-style:solid}html :where([style*=border-top-width]){border-top-style:solid}html :where([style*=border-right-width]){border-right-style:solid}html :where([style*=border-bottom-width]){border-bottom-style:solid}html :where([style*=border-left-width]){border-left-style:solid}html :where(img[class*=wp-image-]){height:auto;max-width:100%}:where(figure){margin:0 0 1em}html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:var(--wp-admin--admin-bar--height,0px)}@media screen and (max-width:600px){html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:0px}}
+.has-text-align-justify {
+	text-align:justify;
+}
+.has-text-align-justify{text-align:justify;}
+</style>
+<style id="global-styles-inline-css">
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--color--primary: #b61200;--wp--preset--color--secondary: #cf4d0226;--wp--preset--color--foreground: #c14420;--wp--preset--color--background: #ffffff;--wp--preset--color--tertiary: #cf4d02;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgba(6,147,227,1) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgba(252,185,0,1) 0%,rgba(255,105,0,1) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgba(255,105,0,1) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: clamp(0.88rem, 0.88rem + ((1vw - 0.2rem) * 0.369), 1.1rem);--wp--preset--font-size--medium: clamp(1.1rem, 1.1rem + ((1vw - 0.2rem) * 0.461), 1.375rem);--wp--preset--font-size--large: clamp(1.375rem, 1.375rem + ((1vw - 0.2rem) * 0.577), 1.719rem);--wp--preset--font-size--x-large: clamp(1.719rem, 1.719rem + ((1vw - 0.2rem) * 0.719), 2.148rem);--wp--preset--font-size--x-small: clamp(0.704rem, 0.704rem + ((1vw - 0.2rem) * 0.295), 0.88rem);--wp--preset--font-size--xx-large: clamp(2.148rem, 2.148rem + ((1vw - 0.2rem) * 0.902), 2.686rem);--wp--preset--font-size--xxx-large: clamp(2.686rem, 2.686rem + ((1vw - 0.2rem) * 2.532), 4.196rem);--wp--preset--font-size--xxxx-large: clamp(2.686rem, 2.686rem + ((1vw - 0.2rem) * 4.292), 5.245rem);--wp--preset--font-family--albert-sans: 'Albert Sans', sans-serif;--wp--preset--font-family--alegreya: Alegreya, serif;--wp--preset--font-family--arvo: Arvo, serif;--wp--preset--font-family--bodoni-moda: 'Bodoni Moda', serif;--wp--preset--font-family--bricolage-grotesque: 'Bricolage Grotesque', sans-serif;--wp--preset--font-family--cabin: Cabin, sans-serif;--wp--preset--font-family--chivo: Chivo, sans-serif;--wp--preset--font-family--commissioner: Commissioner, sans-serif;--wp--preset--font-family--cormorant: Cormorant, serif;--wp--preset--font-family--courier-prime: 'Courier Prime', monospace;--wp--preset--font-family--crimson-pro: 'Crimson Pro', serif;--wp--preset--font-family--dm-mono: 'DM Mono', monospace;--wp--preset--font-family--dm-sans: 'DM Sans', sans-serif;--wp--preset--font-family--dm-serif-display: 'DM Serif Display', serif;--wp--preset--font-family--domine: Domine, serif;--wp--preset--font-family--eb-garamond: 'EB Garamond', serif;--wp--preset--font-family--epilogue: Epilogue, sans-serif;--wp--preset--font-family--fahkwang: Fahkwang, sans-serif;--wp--preset--font-family--figtree: Figtree, sans-serif;--wp--preset--font-family--fira-sans: 'Fira Sans', sans-serif;--wp--preset--font-family--fjalla-one: 'Fjalla One', sans-serif;--wp--preset--font-family--fraunces: Fraunces, serif;--wp--preset--font-family--gabarito: Gabarito, system-ui;--wp--preset--font-family--ibm-plex-mono: 'IBM Plex Mono', monospace;--wp--preset--font-family--ibm-plex-sans: 'IBM Plex Sans', sans-serif;--wp--preset--font-family--ibarra-real-nova: 'Ibarra Real Nova', serif;--wp--preset--font-family--instrument-serif: 'Instrument Serif', serif;--wp--preset--font-family--inter: Inter, sans-serif;--wp--preset--font-family--josefin-sans: 'Josefin Sans', sans-serif;--wp--preset--font-family--jost: Jost, sans-serif;--wp--preset--font-family--libre-baskerville: 'Libre Baskerville', serif;--wp--preset--font-family--libre-franklin: 'Libre Franklin', sans-serif;--wp--preset--font-family--literata: Literata, serif;--wp--preset--font-family--lora: Lora, serif;--wp--preset--font-family--merriweather: Merriweather, serif;--wp--preset--font-family--montserrat: Montserrat, sans-serif;--wp--preset--font-family--newsreader: Newsreader, serif;--wp--preset--font-family--noto-sans-mono: 'Noto Sans Mono', sans-serif;--wp--preset--font-family--nunito: Nunito, sans-serif;--wp--preset--font-family--open-sans: 'Open Sans', sans-serif;--wp--preset--font-family--overpass: Overpass, sans-serif;--wp--preset--font-family--pt-serif: 'PT Serif', serif;--wp--preset--font-family--petrona: Petrona, serif;--wp--preset--font-family--piazzolla: Piazzolla, serif;--wp--preset--font-family--playfair-display: 'Playfair Display', serif;--wp--preset--font-family--plus-jakarta-sans: 'Plus Jakarta Sans', sans-serif;--wp--preset--font-family--poppins: Poppins, sans-serif;--wp--preset--font-family--raleway: Raleway, sans-serif;--wp--preset--font-family--roboto: Roboto, sans-serif;--wp--preset--font-family--roboto-slab: 'Roboto Slab', serif;--wp--preset--font-family--rubik: Rubik, sans-serif;--wp--preset--font-family--rufina: Rufina, serif;--wp--preset--font-family--sora: Sora, sans-serif;--wp--preset--font-family--source-sans-3: 'Source Sans 3', sans-serif;--wp--preset--font-family--source-serif-4: 'Source Serif 4', serif;--wp--preset--font-family--space-mono: 'Space Mono', monospace;--wp--preset--font-family--syne: Syne, sans-serif;--wp--preset--font-family--texturina: Texturina, serif;--wp--preset--font-family--urbanist: Urbanist, sans-serif;--wp--preset--font-family--work-sans: 'Work Sans', sans-serif;--wp--preset--font-family--alvarado: Alvarado;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.25rem;--wp--preset--spacing--40: min(1rem, 2.5vw);--wp--preset--spacing--50: min(2rem, 5vw);--wp--preset--spacing--60: min(4rem, 10vw);--wp--preset--spacing--70: min(6rem, 15vw);--wp--preset--spacing--80: min(8rem, 20vw);--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgba(255, 255, 255, 1), 6px 6px rgba(0, 0, 0, 1);--wp--preset--shadow--crisp: 6px 6px 0px rgba(0, 0, 0, 1);}:root { --wp--style--global--content-size: 621px;--wp--style--global--wide-size: 1274px; }:where(body) { margin: 0; }.wp-site-blocks { padding-top: var(--wp--style--root--padding-top); padding-bottom: var(--wp--style--root--padding-bottom); }.has-global-padding { padding-right: var(--wp--style--root--padding-right); padding-left: var(--wp--style--root--padding-left); }.has-global-padding > .alignfull { margin-right: calc(var(--wp--style--root--padding-right) * -1); margin-left: calc(var(--wp--style--root--padding-left) * -1); }.has-global-padding :where(:not(.alignfull.is-layout-flow) > .has-global-padding:not(.wp-block-block, .alignfull)) { padding-right: 0; padding-left: 0; }.has-global-padding :where(:not(.alignfull.is-layout-flow) > .has-global-padding:not(.wp-block-block, .alignfull)) > .alignfull { margin-left: 0; margin-right: 0; }.wp-site-blocks > .alignleft { float: left; margin-right: 2em; }.wp-site-blocks > .alignright { float: right; margin-left: 2em; }.wp-site-blocks > .aligncenter { justify-content: center; margin-left: auto; margin-right: auto; }:where(.wp-site-blocks) > * { margin-block-start: var(--wp--preset--spacing--50); margin-block-end: 0; }:where(.wp-site-blocks) > :first-child { margin-block-start: 0; }:where(.wp-site-blocks) > :last-child { margin-block-end: 0; }:root { --wp--style--block-gap: var(--wp--preset--spacing--50); }:root :where(.is-layout-flow) > :first-child{margin-block-start: 0;}:root :where(.is-layout-flow) > :last-child{margin-block-end: 0;}:root :where(.is-layout-flow) > *{margin-block-start: var(--wp--preset--spacing--50);margin-block-end: 0;}:root :where(.is-layout-constrained) > :first-child{margin-block-start: 0;}:root :where(.is-layout-constrained) > :last-child{margin-block-end: 0;}:root :where(.is-layout-constrained) > *{margin-block-start: var(--wp--preset--spacing--50);margin-block-end: 0;}:root :where(.is-layout-flex){gap: var(--wp--preset--spacing--50);}:root :where(.is-layout-grid){gap: var(--wp--preset--spacing--50);}.is-layout-flow > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}.is-layout-flow > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}.is-layout-flow > .aligncenter{margin-left: auto !important;margin-right: auto !important;}.is-layout-constrained > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}.is-layout-constrained > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}.is-layout-constrained > .aligncenter{margin-left: auto !important;margin-right: auto !important;}.is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)){max-width: var(--wp--style--global--content-size);margin-left: auto !important;margin-right: auto !important;}.is-layout-constrained > .alignwide{max-width: var(--wp--style--global--wide-size);}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{background-color: #ffeeee;color: var(--wp--preset--color--background);font-family: var(--wp--preset--font-family--rubik);font-size: var(--wp--preset--font-size--large);font-style: normal;font-weight: 500;line-height: 1.6;--wp--style--root--padding-top: 0;--wp--style--root--padding-right: var(--wp--preset--spacing--50);--wp--style--root--padding-bottom: 0;--wp--style--root--padding-left: var(--wp--preset--spacing--50);text-transform: none;}a:where(:not(.wp-element-button)){color: var(--wp--preset--color--background);text-decoration: underline;}:root :where(a:where(:not(.wp-element-button)):hover){color: var(--wp--preset--color--contrast);text-decoration: none;}h1, h2, h3, h4, h5, h6{color: #b61200;font-family: var(--wp--preset--font-family--rubik);font-style: normal;font-weight: 800;line-height: 1;}h1{font-family: var(--wp--preset--font-family--rubik);font-size: var(--wp--preset--font-size--xx-large);font-style: normal;font-weight: 800;line-height: 1.116902457;}h2{font-size: var(--wp--preset--font-size--x-large);line-height: 1.105679702;}h3{font-size: var(--wp--preset--font-size--large);line-height: 1.308900524;}h4{font-size: var(--wp--preset--font-size--medium);line-height: 1.454545455;}h5{font-size: var(--wp--preset--font-size--small);line-height: 1.591;}h6{font-size: var(--wp--preset--font-size--x-small);line-height: 1.704545455;}:root :where(.wp-element-button, .wp-block-button__link){background-color: var(--wp--preset--color--primary);border-radius: 999px;border-width: 0;color: var(--wp--preset--color--background);font-family: var(--wp--preset--font-family--inter);font-size: var(--wp--preset--font-size--small);font-style: normal;font-weight: 400;line-height: 1;padding-top: 0.95rem;padding-right: 2.125rem;padding-bottom: 0.95rem;padding-left: 2.125rem;text-decoration: none;}:root :where(.wp-element-button:hover, .wp-block-button__link:hover){background-color: var(--wp--preset--color--secondary);color: var(--wp--preset--color--base);}:root :where(.wp-element-button:focus, .wp-block-button__link:focus){background-color: var(--wp--preset--color--secondary);color: var(--wp--preset--color--base);outline-color: var(--wp--preset--color--primary);outline-offset: 2px;outline-style: dotted;outline-width: 1px;}:root :where(.wp-element-button:active, .wp-block-button__link:active){background-color: var(--wp--preset--color--primary);color: var(--wp--preset--color--base);}:root :where(.wp-element-caption, .wp-block-audio figcaption, .wp-block-embed figcaption, .wp-block-gallery figcaption, .wp-block-image figcaption, .wp-block-table figcaption, .wp-block-video figcaption){color: var(--wp--preset--color--contrast);font-size: var(--wp--preset--font-size--x-small);}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-primary-color{color: var(--wp--preset--color--primary) !important;}.has-secondary-color{color: var(--wp--preset--color--secondary) !important;}.has-foreground-color{color: var(--wp--preset--color--foreground) !important;}.has-background-color{color: var(--wp--preset--color--background) !important;}.has-tertiary-color{color: var(--wp--preset--color--tertiary) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-primary-background-color{background-color: var(--wp--preset--color--primary) !important;}.has-secondary-background-color{background-color: var(--wp--preset--color--secondary) !important;}.has-foreground-background-color{background-color: var(--wp--preset--color--foreground) !important;}.has-background-background-color{background-color: var(--wp--preset--color--background) !important;}.has-tertiary-background-color{background-color: var(--wp--preset--color--tertiary) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-primary-border-color{border-color: var(--wp--preset--color--primary) !important;}.has-secondary-border-color{border-color: var(--wp--preset--color--secondary) !important;}.has-foreground-border-color{border-color: var(--wp--preset--color--foreground) !important;}.has-background-border-color{border-color: var(--wp--preset--color--background) !important;}.has-tertiary-border-color{border-color: var(--wp--preset--color--tertiary) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}.has-x-small-font-size{font-size: var(--wp--preset--font-size--x-small) !important;}.has-xx-large-font-size{font-size: var(--wp--preset--font-size--xx-large) !important;}.has-xxx-large-font-size{font-size: var(--wp--preset--font-size--xxx-large) !important;}.has-xxxx-large-font-size{font-size: var(--wp--preset--font-size--xxxx-large) !important;}.has-albert-sans-font-family{font-family: var(--wp--preset--font-family--albert-sans) !important;}.has-alegreya-font-family{font-family: var(--wp--preset--font-family--alegreya) !important;}.has-arvo-font-family{font-family: var(--wp--preset--font-family--arvo) !important;}.has-bodoni-moda-font-family{font-family: var(--wp--preset--font-family--bodoni-moda) !important;}.has-bricolage-grotesque-font-family{font-family: var(--wp--preset--font-family--bricolage-grotesque) !important;}.has-cabin-font-family{font-family: var(--wp--preset--font-family--cabin) !important;}.has-chivo-font-family{font-family: var(--wp--preset--font-family--chivo) !important;}.has-commissioner-font-family{font-family: var(--wp--preset--font-family--commissioner) !important;}.has-cormorant-font-family{font-family: var(--wp--preset--font-family--cormorant) !important;}.has-courier-prime-font-family{font-family: var(--wp--preset--font-family--courier-prime) !important;}.has-crimson-pro-font-family{font-family: var(--wp--preset--font-family--crimson-pro) !important;}.has-dm-mono-font-family{font-family: var(--wp--preset--font-family--dm-mono) !important;}.has-dm-sans-font-family{font-family: var(--wp--preset--font-family--dm-sans) !important;}.has-dm-serif-display-font-family{font-family: var(--wp--preset--font-family--dm-serif-display) !important;}.has-domine-font-family{font-family: var(--wp--preset--font-family--domine) !important;}.has-eb-garamond-font-family{font-family: var(--wp--preset--font-family--eb-garamond) !important;}.has-epilogue-font-family{font-family: var(--wp--preset--font-family--epilogue) !important;}.has-fahkwang-font-family{font-family: var(--wp--preset--font-family--fahkwang) !important;}.has-figtree-font-family{font-family: var(--wp--preset--font-family--figtree) !important;}.has-fira-sans-font-family{font-family: var(--wp--preset--font-family--fira-sans) !important;}.has-fjalla-one-font-family{font-family: var(--wp--preset--font-family--fjalla-one) !important;}.has-fraunces-font-family{font-family: var(--wp--preset--font-family--fraunces) !important;}.has-gabarito-font-family{font-family: var(--wp--preset--font-family--gabarito) !important;}.has-ibm-plex-mono-font-family{font-family: var(--wp--preset--font-family--ibm-plex-mono) !important;}.has-ibm-plex-sans-font-family{font-family: var(--wp--preset--font-family--ibm-plex-sans) !important;}.has-ibarra-real-nova-font-family{font-family: var(--wp--preset--font-family--ibarra-real-nova) !important;}.has-instrument-serif-font-family{font-family: var(--wp--preset--font-family--instrument-serif) !important;}.has-inter-font-family{font-family: var(--wp--preset--font-family--inter) !important;}.has-josefin-sans-font-family{font-family: var(--wp--preset--font-family--josefin-sans) !important;}.has-jost-font-family{font-family: var(--wp--preset--font-family--jost) !important;}.has-libre-baskerville-font-family{font-family: var(--wp--preset--font-family--libre-baskerville) !important;}.has-libre-franklin-font-family{font-family: var(--wp--preset--font-family--libre-franklin) !important;}.has-literata-font-family{font-family: var(--wp--preset--font-family--literata) !important;}.has-lora-font-family{font-family: var(--wp--preset--font-family--lora) !important;}.has-merriweather-font-family{font-family: var(--wp--preset--font-family--merriweather) !important;}.has-montserrat-font-family{font-family: var(--wp--preset--font-family--montserrat) !important;}.has-newsreader-font-family{font-family: var(--wp--preset--font-family--newsreader) !important;}.has-noto-sans-mono-font-family{font-family: var(--wp--preset--font-family--noto-sans-mono) !important;}.has-nunito-font-family{font-family: var(--wp--preset--font-family--nunito) !important;}.has-open-sans-font-family{font-family: var(--wp--preset--font-family--open-sans) !important;}.has-overpass-font-family{font-family: var(--wp--preset--font-family--overpass) !important;}.has-pt-serif-font-family{font-family: var(--wp--preset--font-family--pt-serif) !important;}.has-petrona-font-family{font-family: var(--wp--preset--font-family--petrona) !important;}.has-piazzolla-font-family{font-family: var(--wp--preset--font-family--piazzolla) !important;}.has-playfair-display-font-family{font-family: var(--wp--preset--font-family--playfair-display) !important;}.has-plus-jakarta-sans-font-family{font-family: var(--wp--preset--font-family--plus-jakarta-sans) !important;}.has-poppins-font-family{font-family: var(--wp--preset--font-family--poppins) !important;}.has-raleway-font-family{font-family: var(--wp--preset--font-family--raleway) !important;}.has-roboto-font-family{font-family: var(--wp--preset--font-family--roboto) !important;}.has-roboto-slab-font-family{font-family: var(--wp--preset--font-family--roboto-slab) !important;}.has-rubik-font-family{font-family: var(--wp--preset--font-family--rubik) !important;}.has-rufina-font-family{font-family: var(--wp--preset--font-family--rufina) !important;}.has-sora-font-family{font-family: var(--wp--preset--font-family--sora) !important;}.has-source-sans-3-font-family{font-family: var(--wp--preset--font-family--source-sans-3) !important;}.has-source-serif-4-font-family{font-family: var(--wp--preset--font-family--source-serif-4) !important;}.has-space-mono-font-family{font-family: var(--wp--preset--font-family--space-mono) !important;}.has-syne-font-family{font-family: var(--wp--preset--font-family--syne) !important;}.has-texturina-font-family{font-family: var(--wp--preset--font-family--texturina) !important;}.has-urbanist-font-family{font-family: var(--wp--preset--font-family--urbanist) !important;}.has-work-sans-font-family{font-family: var(--wp--preset--font-family--work-sans) !important;}.has-alvarado-font-family{font-family: var(--wp--preset--font-family--alvarado) !important;}
+:root :where(.wp-block-site-logo){padding-top: 0;padding-bottom: 0;}
+:root :where(.wp-block-columns .wp-element-button,.wp-block-columns  .wp-block-button__link){color: var(--wp--preset--color--background);}
+:root :where(.wp-block-image .wp-element-caption){text-align:center;}
+:root :where(.wp-block-navigation){font-size: var(--wp--preset--font-size--small);line-height: 1.364;}:root :where(.wp-block-navigation-is-layout-flow) > :first-child{margin-block-start: 0;}:root :where(.wp-block-navigation-is-layout-flow) > :last-child{margin-block-end: 0;}:root :where(.wp-block-navigation-is-layout-flow) > *{margin-block-start: 1.5rem;margin-block-end: 0;}:root :where(.wp-block-navigation-is-layout-constrained) > :first-child{margin-block-start: 0;}:root :where(.wp-block-navigation-is-layout-constrained) > :last-child{margin-block-end: 0;}:root :where(.wp-block-navigation-is-layout-constrained) > *{margin-block-start: 1.5rem;margin-block-end: 0;}:root :where(.wp-block-navigation-is-layout-flex){gap: 1.5rem;}:root :where(.wp-block-navigation-is-layout-grid){gap: 1.5rem;}:root :where(.wp-block-navigation.wp-block-navigation:not(.has-background) .wp-block-navigation__submenu-container ){border-color: var(--wp--preset--color--base);}
+:root :where(.wp-block-navigation a:where(:not(.wp-element-button))){text-decoration: none;}
+:root :where(.wp-block-navigation a:where(:not(.wp-element-button)):hover){text-decoration: underline;}
+:root :where(p){line-height: calc(1em + 0.625rem);}
+:root :where(.wp-block-post-title){font-size: var(--wp--preset--font-size--xx-large);}
+:root :where(.wp-block-post-title a:where(:not(.wp-element-button))){color: var(--wp--preset--color--contrast);text-decoration: none;}
+:root :where(.wp-block-post-title a:where(:not(.wp-element-button)):hover){text-decoration: underline;}
+:root :where(.wp-block-group){border-radius: 0px;border-top-width: 0px;border-top-style: none;border-right-width: 0px;border-right-style: none;border-bottom-width: 0px;border-bottom-style: none;border-left-width: 0px;border-left-style: none;line-height: 1.5;}
+:root :where(.wp-block-group a:where(:not(.wp-element-button))){color: var(--wp--preset--color--secondary);}
+</style>
+<style id="block-style-variation-styles-inline-css">
+:root :where(.wp-block-site-logo.is-style-rounded--1){border-radius: 9999px;}
+:root :where(.wp-block-site-logo.is-style-rounded--2){border-radius: 9999px;}
+</style>
+<style id="wp-emoji-styles-inline-css">
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+</style>
+<style id="wp-block-template-skip-link-inline-css">
+
+		.skip-link.screen-reader-text {
+			border: 0;
+			clip-path: inset(50%);
+			height: 1px;
+			margin: -1px;
+			overflow: hidden;
+			padding: 0;
+			position: absolute !important;
+			width: 1px;
+			word-wrap: normal !important;
+		}
+
+		.skip-link.screen-reader-text:focus {
+			background-color: #eee;
+			clip-path: none;
+			color: #444;
+			display: block;
+			font-size: 1em;
+			height: auto;
+			left: 5px;
+			line-height: normal;
+			padding: 15px 23px 14px;
+			text-decoration: none;
+			top: 5px;
+			width: auto;
+			z-index: 100000;
+		}
+</style>
+<link crossorigin="anonymous" href="https://s1.wp.com/_static/??/wp-content/mu-plugins/core-compat/wp-mediaelement.css,/wp-content/mu-plugins/wpcom-bbpress-premium-themes.css?m=1432920480j&amp;cssminify=yes" id="all-css-36-1" media="all" rel="stylesheet" type="text/css"/>
+<style id="core-block-supports-inline-css">
+.wp-elements-c57bc552111b0f9385edc2f2faf0864c a:where(:not(.wp-element-button)){color:var(--wp--preset--color--base);}.wp-container-core-group-is-layout-fe53264b{gap:var(--wp--preset--spacing--30);flex-direction:column;align-items:center;}.wp-elements-d64cbdbdb360cfba0fb27d2cd7ffc557 a:where(:not(.wp-element-button)){color:#031f4f;}.wp-container-core-column-is-layout-fcb47e9f > *{margin-block-start:0;margin-block-end:0;}.wp-container-core-column-is-layout-fcb47e9f > * + *{margin-block-start:var(--wp--preset--spacing--30);margin-block-end:0;}.wp-container-core-columns-is-layout-28f84493{flex-wrap:nowrap;}.wp-container-content-a5fc19f1{flex-basis:45%;}.wp-container-core-navigation-is-layout-f5b6105e{gap:var(--wp--preset--spacing--50);justify-content:center;}.wp-container-core-group-is-layout-69c550ab{gap:0;flex-direction:column;align-items:stretch;}.wp-elements-d90705ac59d98ca9b4ee19d6f8422aa1 a:where(:not(.wp-element-button)){color:var(--wp--preset--color--primary);}.wp-elements-bed93b91fde0e2254b35026b623d9b6c a:where(:not(.wp-element-button)){color:var(--wp--preset--color--primary);}.wp-container-core-columns-is-layout-0111f410{flex-wrap:nowrap;}.wp-elements-9741684fdc40511d798cf4bd24aded65 a:where(:not(.wp-element-button)){color:var(--wp--preset--color--primary);}.wp-elements-b79030baada321b0622abadff7502213 a:where(:not(.wp-element-button)){color:var(--wp--preset--color--primary);}.wp-elements-d5e11ea21dcae6eddac83e695fe9f0d6 a:where(:not(.wp-element-button)){color:var(--wp--preset--color--primary);}.wp-elements-89b8c72098ca84aeedd05ec90cc69254 a:where(:not(.wp-element-button)){color:#2812a3;}.wp-elements-a4de026667434a1e2e4aab2185295e29 a:where(:not(.wp-element-button)){color:#2812a3;}.wp-container-core-columns-is-layout-5c7af128{flex-wrap:nowrap;gap:2em 0;}.wp-elements-508eb3a202212348371c7f0fcc8a6adc a:where(:not(.wp-element-button)){color:#2812a3;}.wp-elements-a25b3fbd41343b6ea5d1d780999ddbce a:where(:not(.wp-element-button)){color:#2812a3;}.wp-container-core-columns-is-layout-46531004{flex-wrap:nowrap;}.wp-container-core-columns-is-layout-f0342b05{flex-wrap:nowrap;}.wp-elements-253e96df0f881149d043c438b933b606 a:where(:not(.wp-element-button)){color:#2812a3;}.wp-elements-b54ec96728e408983d70ff63f1c2b5f5 a:where(:not(.wp-element-button)){color:#2812a3;}.wp-elements-b4552c4b118724ab924e0dcf3736e464 a:where(:not(.wp-element-button)){color:var(--wp--preset--color--primary);}.wp-elements-abf38fb6b1bad5091a33cbdcc111b870 a:where(:not(.wp-element-button)){color:#ffb68cbd;}.wp-elements-f32a608c67f1b03516c34a8bc5c27c22 a:where(:not(.wp-element-button)){color:#2812a3;}.wp-container-core-column-is-layout-918ae4a1 > *{margin-block-start:0;margin-block-end:0;}.wp-container-core-column-is-layout-918ae4a1 > * + *{margin-block-start:0;margin-block-end:0;}.wp-elements-e82919790b285efdc37feea8ac48b699 a:where(:not(.wp-element-button)){color:#ffffff;}.wp-elements-97c6bd243ebe2d0821d9eefeaf54ab0c a:where(:not(.wp-element-button)){color:#ffffff;}.wp-container-core-column-is-layout-d3fb2301 > *{margin-block-start:0;margin-block-end:0;}.wp-container-core-column-is-layout-d3fb2301 > * + *{margin-block-start:var(--wp--preset--spacing--30);margin-block-end:0;}.wp-elements-2b88fdc9d8f947da171276cb55ab7797 a:where(:not(.wp-element-button)){color:#ffffff;}.wp-elements-a129928979628e92d53a3668fb8f5105 a:where(:not(.wp-element-button)){color:#ffffff;}.wp-container-core-columns-is-layout-25c28f93{flex-wrap:nowrap;gap:0 var(--wp--preset--spacing--70);}.wp-container-core-group-is-layout-df757ecc > .alignfull{margin-right:calc(var(--wp--style--root--padding-right, var(--wp--custom--gap--horizontal)) * -1);margin-left:calc(var(--wp--style--root--padding-left, var(--wp--custom--gap--horizontal)) * -1);}
+</style>
+<link crossorigin="anonymous" href="https://s0.wp.com/_static/??-eJx9jV0OwjAMgy9EibZJTDwgzrKfUMLSplpTTdyeABIMkHjz58Q2LMkNEhWjQigucfEUMwwSglmOaUKj/OVszdkAQRQlS+eXeB5WnXrGYA2p9DAZLyIjZL0y/nyu1mfsWbxJ/5h+47+QR3EsQ6ck8QPciTua79FjOFRtVddt0+x3lxvpQF2E&amp;cssminify=yes" id="all-css-38-1" media="all" rel="stylesheet" type="text/css"/>
+<style id="jetpack-global-styles-frontend-style-inline-css">
+:root { --font-headings: unset; --font-base: unset; --font-headings-default: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif; --font-base-default: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;}
+</style>
+<link crossorigin="anonymous" href="https://s2.wp.com/wp-content/themes/h4/global.css?m=1420737423i&amp;cssminify=yes" id="all-css-40-1" media="all" rel="stylesheet" type="text/css"/>
+<script id="jetpack-mu-wpcom-settings-js-before">
+var JETPACK_MU_WPCOM_SETTINGS = {"assetsUrl":"https:\/\/s1.wp.com\/wp-content\/mu-plugins\/jetpack-mu-wpcom-plugin\/moon\/jetpack_vendor\/automattic\/jetpack-mu-wpcom\/src\/build\/"};
+</script>
+<script crossorigin="anonymous" src="https://s1.wp.com/wp-content/js/rlt-proxy.js?m=1720530689i" type="text/javascript"></script>
+<script id="rlt-proxy-js-after">
+	rltInitialize( {"token":null,"iframeOrigins":["https:\/\/widgets.wp.com"]} );
+</script>
+<link href="https://sipe25.wordpress.com/xmlrpc.php?rsd" rel="EditURI" title="RSD" type="application/rsd+xml"/>
+<meta content="WordPress.com" name="generator"/>
+<link href="index.html" rel="canonical"/>
+<link href="https://wp.me/PgpIOD-D" rel="shortlink"/>
+<link href="https://public-api.wordpress.com/oembed/?format=json&amp;url=https%3A%2F%2Fsipe25.com%2Fpartnerships%2F&amp;for=wpcom-auto-discovery" rel="alternate" type="application/json+oembed"/><link href="https://public-api.wordpress.com/oembed/?format=xml&amp;url=https%3A%2F%2Fsipe25.com%2Fpartnerships%2F&amp;for=wpcom-auto-discovery" rel="alternate" type="application/xml+oembed"/>
+<!-- Jetpack Open Graph Tags -->
+<meta content="article" property="og:type"/>
+<meta content="Partnerships" property="og:title"/>
+<meta content="https://sipe25.com/partnerships/" property="og:url"/>
+<meta content="Main sponsors: QSENSATO, born as a spin-off of the University of Bari, is an innovative start-up specialized in the field of quantum sensors and metrology. QSENSATO technology is based on atomic-ph…" property="og:description"/>
+<meta content="2025-05-05T12:04:53+00:00" property="article:published_time"/>
+<meta content="2025-09-10T09:08:25+00:00" property="article:modified_time"/>
+<meta content="https://sipe25.com/wp-content/uploads/2025/07/qsensato_logowhiteblue.png" property="og:image"/>
+<meta content="1719" property="og:image:width"/>
+<meta content="427" property="og:image:height"/>
+<meta content="" property="og:image:alt"/>
+<meta content="it_IT" property="og:locale"/>
+<meta content="https://www.facebook.com/WordPresscom" property="article:publisher"/>
+<meta content="Partnerships" name="twitter:text:title"/>
+<meta content="https://sipe25.com/wp-content/uploads/2025/07/qsensato_logowhiteblue.png?w=640" name="twitter:image"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<!-- End Jetpack Open Graph Tags -->
+<link href="../osd.xml" rel="search" title="" type="application/opensearchdescription+xml"/>
+<link href="https://s1.wp.com/opensearch.xml" rel="search" title="WordPress.com" type="application/opensearchdescription+xml"/>
+<meta content="Main sponsors: QSENSATO, born as a spin-off of the University of Bari, is an innovative start-up specialized in the field of quantum sensors and metrology. QSENSATO technology is based on atomic-photonic chips that exploit the properties of quantum mechanics to detect minimal variations in electric and magnetic fields, making unprecedented precision in measurements possible.The sensors…" name="description"/>
+<style class="wp-fonts-local">
+@font-face{font-family:Inter;font-style:normal;font-weight:100;font-display:fallback;src:url('https://fonts.wp.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyeMZ1rib2Bg-4.woff2') format('woff2');}
+@font-face{font-family:Inter;font-style:normal;font-weight:200;font-display:fallback;src:url('https://fonts.wp.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuDyfMZ1rib2Bg-4.woff2') format('woff2');}
+@font-face{font-family:Inter;font-style:normal;font-weight:300;font-display:fallback;src:url('https://fonts.wp.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuOKfMZ1rib2Bg-4.woff2') format('woff2');}
+@font-face{font-family:Inter;font-style:normal;font-weight:400;font-display:fallback;src:url('https://fonts.wp.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZ1rib2Bg-4.woff2') format('woff2');}
+@font-face{font-family:Inter;font-style:normal;font-weight:500;font-display:fallback;src:url('https://fonts.wp.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuI6fMZ1rib2Bg-4.woff2') format('woff2');}
+@font-face{font-family:Inter;font-style:normal;font-weight:600;font-display:fallback;src:url('https://fonts.wp.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYMZ1rib2Bg-4.woff2') format('woff2');}
+@font-face{font-family:Inter;font-style:normal;font-weight:700;font-display:fallback;src:url('https://fonts.wp.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYMZ1rib2Bg-4.woff2') format('woff2');}
+@font-face{font-family:Inter;font-style:normal;font-weight:800;font-display:fallback;src:url('https://fonts.wp.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuDyYMZ1rib2Bg-4.woff2') format('woff2');}
+@font-face{font-family:Inter;font-style:normal;font-weight:900;font-display:fallback;src:url('https://fonts.wp.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuBWYMZ1rib2Bg-4.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:normal;font-weight:300;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-WYi1VU80V4bVkA.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:normal;font-weight:400;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4i1VU80V4bVkA.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:normal;font-weight:500;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-NYi1VU80V4bVkA.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:normal;font-weight:600;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-2Y-1VU80V4bVkA.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:normal;font-weight:700;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-4I-1VU80V4bVkA.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:normal;font-weight:800;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-h4-1VU80V4bVkA.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:normal;font-weight:900;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-ro-1VU80V4bVkA.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:italic;font-weight:300;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWbBXyIfDnIV7nEt3KSJbVDV49rz8sDE0U1dYPFkJ1O.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:italic;font-weight:400;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWbBXyIfDnIV7nEt3KSJbVDV49rz8tdE0U1dYPFkJ1O.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:italic;font-weight:500;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWbBXyIfDnIV7nEt3KSJbVDV49rz8tvE0U1dYPFkJ1O.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:italic;font-weight:600;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWbBXyIfDnIV7nEt3KSJbVDV49rz8uDFEU1dYPFkJ1O.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:italic;font-weight:700;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWbBXyIfDnIV7nEt3KSJbVDV49rz8u6FEU1dYPFkJ1O.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:italic;font-weight:800;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWbBXyIfDnIV7nEt3KSJbVDV49rz8vdFEU1dYPFkJ1O.woff2') format('woff2');}
+@font-face{font-family:Rubik;font-style:italic;font-weight:900;font-display:fallback;src:url('https://fonts.wp.com/s/rubik/v28/iJWbBXyIfDnIV7nEt3KSJbVDV49rz8v0FEU1dYPFkJ1O.woff2') format('woff2');}
+</style>
+<link href="../wp-content/uploads/2025/03/crepuscolo-grande-176ca.png?w=32" rel="icon" sizes="32x32"/>
+<link href="../wp-content/uploads/2025/03/crepuscolo-grande-19939.png?w=192" rel="icon" sizes="192x192"/>
+<link href="../wp-content/uploads/2025/03/crepuscolo-grande-1ad83.png?w=180" rel="apple-touch-icon"/>
+<meta content="https://sipe25.com/wp-content/uploads/2025/03/crepuscolo-grande-1.png?w=270" name="msapplication-TileImage"/>
+</head>
+<body class="wp-singular page-template-default page page-id-39 wp-custom-logo wp-embed-responsive wp-theme-pubkentwood is-block-theme customizer-styles-applied jetpack-reblog-enabled">
+<div class="wp-site-blocks"><header class="wp-block-template-part">
+<div class="wp-block-group is-vertical is-content-justification-stretch is-layout-flex wp-container-core-group-is-layout-69c550ab wp-block-group-is-layout-flex">
+<div class="wp-block-group has-base-color has-text-color has-background has-link-color wp-elements-c57bc552111b0f9385edc2f2faf0864c is-layout-flow wp-block-group-is-layout-flow" style="background-color:#b61200;padding-top:var(--wp--preset--spacing--50);padding-right:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow" style="flex-basis:240px"></div>
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
+<div class="wp-block-group has-small-font-size is-vertical is-content-justification-center is-layout-flex wp-container-core-group-is-layout-fe53264b wp-block-group-is-layout-flex" style="border-style:none;border-width:0px;border-radius:0px;min-height:0px;margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0"><div class="is-style-rounded is-style-rounded--1 wp-block-site-logo"><a class="custom-logo-link" href="../" rel="home"><img alt="" class="custom-logo" data-attachment-id="404" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="crepuscolo, grande" data-large-file="../wp-content/uploads/2025/03/crepuscolo-grande-12dff.png?w=1024" data-medium-file="https://sipe25.com/wp-content/uploads/2025/03/crepuscolo-grande-1.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/03/crepuscolo-grande-1.png" data-orig-size="8283,8283" data-permalink="https://sipe25.com/?attachment_id=404" decoding="async" height="104" sizes="(max-width: 104px) 100vw, 104px" src="../wp-content/uploads/2025/03/crepuscolo-grande-1.png" width="104"/></a></div></div>
+</div>
+<div class="wp-block-column is-vertically-aligned-center has-background is-layout-flow wp-container-core-column-is-layout-fcb47e9f wp-block-column-is-layout-flow" style="border-radius:20px;background-color:#faca69;padding-top:var(--wp--preset--spacing--40);padding-right:0;padding-bottom:var(--wp--preset--spacing--40);padding-left:0;flex-basis:240px">
+<p class="has-text-align-center has-text-color has-link-color has-x-small-font-size wp-elements-d64cbdbdb360cfba0fb27d2cd7ffc557" style="color:#031f4f"><strong>Follow our IG for all the news:</strong></p>
+<figure class="wp-block-image aligncenter size-full is-resized"><a href="https://www.instagram.com/sipe.25/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-49" height="900" loading="lazy" src="https://sipe25.wordpress.com/wp-content/uploads/2025/03/instagram_icon.png" style="width:36px;height:auto" width="900"/></a></figure>
+</div>
+</div>
+<nav aria-label="Navigazione" class="has-text-color has-white-color items-justified-center wp-block-navigation wp-container-content-a5fc19f1 is-content-justification-center is-layout-flex wp-container-core-navigation-is-layout-f5b6105e wp-block-navigation-is-layout-flex"><ul class="wp-block-navigation__container has-text-color has-white-color items-justified-center wp-block-navigation"><li class="wp-block-navigation-item wp-block-navigation-link has-small-font-size"><a class="wp-block-navigation-item__content" href="https://ai-sf.it/sipe25/sign-up/"><span class="wp-block-navigation-item__label"><strong>SIGN UP</strong></span></a></li><li class="wp-block-navigation-item wp-block-navigation-link has-small-font-size"><a class="wp-block-navigation-item__content" href="https://ai-sf.it/sipe25/programma/"><span class="wp-block-navigation-item__label"><strong>PROGRAM</strong></span></a></li><li class="wp-block-navigation-item wp-block-navigation-link has-small-font-size"><a class="wp-block-navigation-item__content" href="https://ai-sf.it/sipe25/speakers/"><span class="wp-block-navigation-item__label"><strong>SPEAKERS</strong></span></a></li><li class="wp-block-navigation-item wp-block-navigation-link has-small-font-size"><a class="wp-block-navigation-item__content" href="https://ai-sf.it/sipe25/locations/"><span class="wp-block-navigation-item__label"><strong>LOCATIONS</strong></span></a></li><li class="wp-block-navigation-item wp-block-navigation-link has-small-font-size"><a class="wp-block-navigation-item__content" href="https://ai-sf.it/sipe25/urban-transport/"><span class="wp-block-navigation-item__label"><strong>URBAN TRANSPORT</strong></span></a></li><li class="wp-block-navigation-item wp-block-navigation-link has-small-font-size"><a class="wp-block-navigation-item__content" href="https://ai-sf.it/sipe25/organizing-committee/"><span class="wp-block-navigation-item__label"><strong>ORGANIZING COMMITTEE</strong></span></a></li><li class="wp-block-navigation-item current-menu-item wp-block-navigation-link has-small-font-size"><a aria-current="page" class="wp-block-navigation-item__content" href="https://ai-sf.it/sipe25/partnerships/"><span class="wp-block-navigation-item__label"><strong>PARTNERSHIPS</strong></span></a></li></ul></nav></div>
+</div>
+</header>
+<main class="wp-block-group alignfull is-layout-flow wp-block-group-is-layout-flow" style="margin-top:0px;margin-bottom:0px">
+<div class="wp-block-group is-layout-flow wp-block-group-is-layout-flow" style="padding-top:var(--wp--preset--spacing--70);padding-bottom:var(--wp--preset--spacing--70)">
+<div class="wp-block-group has-global-padding is-layout-constrained wp-block-group-is-layout-constrained" style="margin-bottom:var(--wp--preset--spacing--60)">
+<h2 class="has-text-align-center wp-block-post-title">Partnerships</h2>
+</div>
+<div class="entry-content wp-block-post-content has-global-padding is-content-justification-center is-layout-constrained wp-block-post-content-is-layout-constrained">
+<h3 class="wp-block-heading alignwide has-primary-color has-text-color has-link-color wp-elements-d90705ac59d98ca9b4ee19d6f8422aa1" style="margin-top:var(--wp--preset--spacing--40);margin-bottom:var(--wp--preset--spacing--40)">Main sponsors:</h3>
+<div class="wp-block-columns alignwide has-background is-layout-flex wp-container-core-columns-is-layout-0111f410 wp-block-columns-is-layout-flex" style="border-top-left-radius:28px;border-top-right-radius:28px;border-bottom-left-radius:28px;border-bottom-right-radius:28px;background-color:#ffb68cbd;padding-right:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
+<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow" style="padding-right:0;padding-left:0">
+<figure class="wp-block-image aligncenter size-large is-resized is-style-default" style="margin-top:0;margin-bottom:0"><a href="https://quantumitalia.vc/portfolio/qsensato/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-547" data-attachment-id="547" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="QSENSATO_LOGOWhite&amp;amp;Blue" data-large-file="https://sipe25.com/wp-content/uploads/2025/07/qsensato_logowhiteblue.png?w=1024" data-medium-file="https://sipe25.com/wp-content/uploads/2025/07/qsensato_logowhiteblue.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/07/qsensato_logowhiteblue.png" data-orig-size="1719,427" data-permalink="https://sipe25.com/partnerships/qsensato_logowhiteblue/" height="254" loading="lazy" sizes="(max-width: 1024px) 100vw, 1024px" src="https://sipe25.com/wp-content/uploads/2025/07/qsensato_logowhiteblue.png?w=1024" style="aspect-ratio:1.655051175873115;object-fit:contain;width:305px;height:auto" width="1024"/></a></figure>
+<p class="has-text-align-justify has-primary-color has-text-color has-link-color has-small-font-size wp-elements-bed93b91fde0e2254b35026b623d9b6c" id="tw-target-text"><strong>QSENSATO</strong>, born as a spin-off of the University of Bari, is an innovative start-up specialized in the field of quantum sensors and metrology. <strong>QSENSATO </strong>technology is based on atomic-photonic chips that exploit the properties of quantum mechanics to detect minimal variations in electric and magnetic fields, making unprecedented precision in measurements possible.<br/>The sensors developed by the start-up open up new possibilities in the collection of empirical data in an extremely accurate and timely manner, finding application in strategic areas such as medical diagnostics, geophysical exploration, GPS-free navigation and monitoring of critical infrastructures.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="wp-block-columns alignwide has-background is-layout-flex wp-container-core-columns-is-layout-0111f410 wp-block-columns-is-layout-flex" style="border-top-left-radius:28px;border-top-right-radius:28px;border-bottom-left-radius:28px;border-bottom-right-radius:28px;background-color:#ffb68cbd;padding-right:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
+<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow" style="padding-right:0;padding-left:0">
+<figure class="wp-block-image aligncenter size-large is-resized is-style-default" style="margin-top:0;margin-bottom:0"><a href="https://www.intesasanpaolo.com/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-629" data-attachment-id="629" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="Intesa_Sanpaolo_logo.svg" data-large-file="https://sipe25.com/wp-content/uploads/2025/09/intesa_sanpaolo_logo.svg_.png?w=1024" data-medium-file="https://sipe25.com/wp-content/uploads/2025/09/intesa_sanpaolo_logo.svg_.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/09/intesa_sanpaolo_logo.svg_.png" data-orig-size="2560,287" data-permalink="https://sipe25.com/partnerships/intesa_sanpaolo_logo-svg/" height="114" loading="lazy" sizes="(max-width: 1024px) 100vw, 1024px" src="https://sipe25.com/wp-content/uploads/2025/09/intesa_sanpaolo_logo.svg_.png?w=1024" style="aspect-ratio:1.655051175873115;object-fit:contain;width:440px;height:auto" width="1024"/></a></figure>
+<p class="has-text-align-justify has-primary-color has-text-color has-link-color has-small-font-size wp-elements-9741684fdc40511d798cf4bd24aded65" id="tw-target-text"><strong>Intesa Sanpaolo Group</strong> is one of Europe’s leading banking groups, with a strong commitment to ESG principles, including climate action, and a global ranking among the top players for social impact. It is the leader in Italy across all business areas – retail, corporate, and wealth management – serving millions of customers through a widespread national branch network.<br/>The Group also has a strategic international presence, with operations in Central and Eastern Europe, the Middle East and North Africa, as well as a global network supporting corporate clients in 25 countries, especially in regions where Italian businesses are most active.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="wp-block-columns alignwide has-background is-layout-flex wp-container-core-columns-is-layout-0111f410 wp-block-columns-is-layout-flex" style="border-top-left-radius:28px;border-top-right-radius:28px;border-bottom-left-radius:28px;border-bottom-right-radius:28px;background-color:#ffb68cbd;padding-right:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
+<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow" style="padding-right:0;padding-left:0">
+<figure class="wp-block-image aligncenter size-large is-resized is-style-default" style="margin-top:0;margin-bottom:0"><a href="https://www.sfera-srl.it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-631" data-attachment-id="631" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="upscalemedia-transformed-removebg-preview" data-large-file="https://sipe25.com/wp-content/uploads/2025/09/upscalemedia-transformed-removebg-preview.png?w=500" data-medium-file="https://sipe25.com/wp-content/uploads/2025/09/upscalemedia-transformed-removebg-preview.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/09/upscalemedia-transformed-removebg-preview.png" data-orig-size="500,500" data-permalink="https://sipe25.com/partnerships/upscalemedia-transformed-removebg-preview/" height="500" loading="lazy" sizes="(max-width: 500px) 100vw, 500px" src="https://sipe25.com/wp-content/uploads/2025/09/upscalemedia-transformed-removebg-preview.png?w=500" style="aspect-ratio:1.655051175873115;object-fit:contain;width:313px;height:auto" width="500"/></a></figure>
+<p class="has-text-align-justify has-primary-color has-text-color has-link-color has-small-font-size wp-elements-b79030baada321b0622abadff7502213" id="tw-target-text"><strong>Sfera Informatica</strong> is a Bari-based IT company with over 20 years of experience in designing, developing, and maintaining advanced ecosystems in information technology and industrial automation. Over the years, the company has supported organizations across Italy in modernizing their technological infrastructure and adapting to the fast pace of digital transformation. <br/>Its solid expertise, continuous innovation, and strong international network allow Sfera Informatica to deliver high-quality solutions tailored to the needs of both private companies and public institutions. The focus is not only on introducing new technologies but also on ensuring efficiency, reliability, and long-term customer support.</p>
+</div>
+</div>
+</div>
+</div>
+<div aria-hidden="true" class="wp-block-spacer" style="height:50px"></div>
+<h3 class="wp-block-heading alignwide">Ordinary sponsors:</h3>
+<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex" style="border-radius:28px">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
+<div class="wp-block-columns alignwide has-background is-layout-flex wp-container-core-columns-is-layout-0111f410 wp-block-columns-is-layout-flex" style="border-top-left-radius:28px;border-top-right-radius:28px;border-bottom-left-radius:28px;border-bottom-right-radius:28px;background-color:#ffb68cbd;padding-right:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
+<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow" style="padding-right:0;padding-left:0">
+<figure class="wp-block-image aligncenter size-large is-resized is-style-default" style="margin-top:0;margin-bottom:0"><a href="https://www.rotonium.com/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-634" data-attachment-id="634" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="Rotonium_logo_Ncar_2" data-large-file="https://sipe25.com/wp-content/uploads/2025/09/rotonium_logo_ncar_2-1.png?w=1024" data-medium-file="https://sipe25.com/wp-content/uploads/2025/09/rotonium_logo_ncar_2-1.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/09/rotonium_logo_ncar_2-1.png" data-orig-size="1690,293" data-permalink="https://sipe25.com/partnerships/rotonium_logo_ncar_2-2/" height="177" loading="lazy" sizes="(max-width: 1024px) 100vw, 1024px" src="https://sipe25.com/wp-content/uploads/2025/09/rotonium_logo_ncar_2-1.png?w=1024" style="aspect-ratio:1.655051175873115;object-fit:contain;width:313px;height:auto" width="1024"/></a></figure>
+<p class="has-text-align-justify has-primary-color has-text-color has-link-color has-small-font-size wp-elements-d5e11ea21dcae6eddac83e695fe9f0d6" id="tw-target-text"><strong>Rotonium </strong>is a deeptech company that focuses on the development of SWaP optimized, scalable, room temperature Photonic Quantum Computers to enable their use everywhere.<br/>By using the unique orbital angular momentum (OAM) properties of photons, they aim to revolutionize radio broadcasting and open new frontiers in quantum computing. Although photonic technologies are still in their infancy, we are confident they will inspire transformative innovations and disruptive products.<br/><strong>Rotonium</strong> is committed to leading this photonic revolution, shaping the future with bold, visionary solutions.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div aria-hidden="true" class="wp-block-spacer" style="height:50px"></div>
+<h3 class="wp-block-heading alignwide has-text-color has-link-color wp-elements-89b8c72098ca84aeedd05ec90cc69254" style="color:#2812a3">With the support of:</h3>
+<div class="wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-5c7af128 wp-block-columns-is-layout-flex" style="border-top-left-radius:28px;border-top-right-radius:28px;padding-right:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
+<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex">
+<div class="wp-block-column has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#6abaf763;padding-top:var(--wp--preset--spacing--50);padding-right:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<figure class="wp-block-image aligncenter size-large is-resized is-style-default" style="margin-top:0;margin-bottom:0"><a href="https://www.uniba.it/it/ricerca/dipartimenti/fisica" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-499" data-attachment-id="499" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="DIF_01(bl)" data-large-file="https://sipe25.com/wp-content/uploads/2025/06/dif_01bl.png?w=1024" data-medium-file="https://sipe25.com/wp-content/uploads/2025/06/dif_01bl.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/06/dif_01bl.png" data-orig-size="4086,3238" data-permalink="https://sipe25.com/partnerships/dif_01bl/" height="811" loading="lazy" sizes="(max-width: 1024px) 100vw, 1024px" src="https://sipe25.com/wp-content/uploads/2025/06/dif_01bl.png?w=1024" style="object-fit:contain;width:331px;height:200px" width="1024"/></a></figure>
+<p class="has-text-align-justify has-text-color has-link-color has-small-font-size wp-elements-a4de026667434a1e2e4aab2185295e29" id="tw-target-text" style="color:#2812a3;margin-right:0;margin-left:0;padding-right:0;padding-left:0">The <strong>Michelangelo Merlin Interuniversity Department of Physics</strong> of the Aldo Moro University and the Polytechnic of Bari (DIF) promotes research activities in the field of basic and applied physics, conducted through qualified international collaborations. These peculiarities have contributed to the growth of the Puglia Region, a nationally recognized development center for advanced technologies in many sectors like mechatronics, aerospace and environmental and biomedical sensors.<br/>The DIF is also the only interuniversity department of Physics in Italy, maintaining that cultural unity which has always been a strong point of the department. In 2023 it was appointed Department of Excellence 2023-2027 due to the excellent quality of scientific research and didactic design demonstrated.<br/>The department brings together a vast community of researchers who operate in a cohesive, coordinated and synergistic way, engaged in basic, applied and multidisciplinary research activities, in training and higher education and third mission activities.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-46531004 wp-block-columns-is-layout-flex" style="margin-top:var(--wp--preset--spacing--50);margin-bottom:var(--wp--preset--spacing--50);padding-top:0;padding-right:var(--wp--preset--spacing--50);padding-bottom:0;padding-left:var(--wp--preset--spacing--50)">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
+<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex">
+<div class="wp-block-column has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#6abaf763;padding-top:var(--wp--preset--spacing--50);padding-right:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<figure class="wp-block-image aligncenter size-large is-resized is-style-default" style="margin-top:0;margin-bottom:0"><a href="https://www.ba.infn.it/it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-481" data-attachment-id="481" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="2_BARI_LOGO_NOME_ESTESO-removebg-preview" data-large-file="https://sipe25.com/wp-content/uploads/2025/06/2_bari_logo_nome_esteso-removebg-preview.png?w=621" data-medium-file="https://sipe25.com/wp-content/uploads/2025/06/2_bari_logo_nome_esteso-removebg-preview.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/06/2_bari_logo_nome_esteso-removebg-preview.png" data-orig-size="621,402" data-permalink="https://sipe25.com/partnerships/2_bari_logo_nome_esteso-removebg-preview/" height="402" loading="lazy" sizes="(max-width: 621px) 100vw, 621px" src="https://sipe25.com/wp-content/uploads/2025/06/2_bari_logo_nome_esteso-removebg-preview.png?w=621" style="object-fit:contain;width:331px;height:200px" width="621"/></a></figure>
+<p class="has-text-align-justify has-text-color has-link-color has-small-font-size wp-elements-508eb3a202212348371c7f0fcc8a6adc" id="tw-target-text" style="color:#2812a3">The BARI section of the <strong>National Institute for Nuclear Physics</strong> (INFN) is responsible for promoting, coordinating and carrying out scientific research in the field of nuclear, subnuclear and astroparticle physics, as well as the technological development necessary for activities in these sectors.</p>
+</div>
+</div>
+</div>
+<div class="wp-block-column has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#6abaf763;padding-top:var(--wp--preset--spacing--50);padding-right:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<figure class="wp-block-image aligncenter size-large is-resized is-style-default" style="margin-top:0;margin-bottom:0"><a href="https://scuolascienzeetecnologie.uniba.it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-503" data-attachment-id="503" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="Scuola_Scienze-removebg-preview" data-large-file="https://sipe25.com/wp-content/uploads/2025/06/scuola_scienze-removebg-preview.png?w=500" data-medium-file="https://sipe25.com/wp-content/uploads/2025/06/scuola_scienze-removebg-preview.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/06/scuola_scienze-removebg-preview.png" data-orig-size="500,500" data-permalink="https://sipe25.com/partnerships/scuola_scienze-removebg-preview/" height="500" loading="lazy" sizes="(max-width: 500px) 100vw, 500px" src="https://sipe25.com/wp-content/uploads/2025/06/scuola_scienze-removebg-preview.png?w=500" style="object-fit:contain;width:331px;height:200px" width="500"/></a></figure>
+<p class="has-text-align-justify has-text-color has-link-color has-small-font-size wp-elements-a25b3fbd41343b6ea5d1d780999ddbce" id="tw-target-text" style="color:#2812a3">The shared scientific-disciplinary areas across Degree Courses in Chemistry, Physics, Computer Science, Mathematics, and Earth Sciences highlight their transversal nature, motivating the creation of a <strong>School of Sciences and Technologies</strong> to coordinate training and enhance interdisciplinary research.</p>
+</div>
+</div>
+<div class="wp-block-columns alignwide has-background is-layout-flex wp-container-core-columns-is-layout-f0342b05 wp-block-columns-is-layout-flex" style="border-top-left-radius:28px;border-top-right-radius:28px;background-color:#6abaf763;margin-top:0;margin-bottom:0">
+<div class="wp-block-column is-vertically-aligned-top is-layout-flow wp-block-column-is-layout-flow">
+<figure class="wp-block-image alignleft size-large is-resized"><a href="https://nqsti.it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-511" data-attachment-id="511" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="NQSTI_logo-colori-sfondo-bianco-removebg-preview" data-large-file="https://sipe25.com/wp-content/uploads/2025/06/nqsti_logo-colori-sfondo-bianco-removebg-preview-1.png?w=779" data-medium-file="https://sipe25.com/wp-content/uploads/2025/06/nqsti_logo-colori-sfondo-bianco-removebg-preview-1.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/06/nqsti_logo-colori-sfondo-bianco-removebg-preview-1.png" data-orig-size="779,320" data-permalink="https://sipe25.com/partnerships/nqsti_logo-colori-sfondo-bianco-removebg-preview-2/" height="320" loading="lazy" sizes="(max-width: 779px) 100vw, 779px" src="https://sipe25.com/wp-content/uploads/2025/06/nqsti_logo-colori-sfondo-bianco-removebg-preview-1.png?w=779" style="aspect-ratio:2.434466649364132;width:355px;height:auto" width="779"/></a></figure>
+</div>
+<div class="wp-block-column is-vertically-aligned-top is-layout-flow wp-block-column-is-layout-flow">
+<figure class="wp-block-image aligncenter size-large"><img alt="" class="wp-image-508" data-attachment-id="508" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="Progetti-del-PNRR-Piano-Nazionale-di-Ripresa-e-Resilienza-removebg-preview" data-large-file="https://sipe25.com/wp-content/uploads/2025/06/progetti-del-pnrr-piano-nazionale-di-ripresa-e-resilienza-removebg-preview.png?w=906" data-medium-file="https://sipe25.com/wp-content/uploads/2025/06/progetti-del-pnrr-piano-nazionale-di-ripresa-e-resilienza-removebg-preview.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/06/progetti-del-pnrr-piano-nazionale-di-ripresa-e-resilienza-removebg-preview.png" data-orig-size="906,275" data-permalink="https://sipe25.com/partnerships/progetti-del-pnrr-piano-nazionale-di-ripresa-e-resilienza-removebg-preview/" height="275" loading="lazy" sizes="(max-width: 906px) 100vw, 906px" src="https://sipe25.com/wp-content/uploads/2025/06/progetti-del-pnrr-piano-nazionale-di-ripresa-e-resilienza-removebg-preview.png?w=906" width="906"/></figure>
+</div>
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow" style="flex-basis:200px">
+<figure class="wp-block-image aligncenter size-large is-resized"><img alt="" class="wp-image-509" data-attachment-id="509" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="MUR-logo.svg" data-large-file="https://sipe25.com/wp-content/uploads/2025/06/mur-logo.svg_.png?w=750" data-medium-file="https://sipe25.com/wp-content/uploads/2025/06/mur-logo.svg_.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/06/mur-logo.svg_.png" data-orig-size="750,750" data-permalink="https://sipe25.com/partnerships/mur-logo-svg/" height="750" loading="lazy" sizes="(max-width: 750px) 100vw, 750px" src="https://sipe25.com/wp-content/uploads/2025/06/mur-logo.svg_.png?w=750" style="width:149px;height:auto" width="750"/></figure>
+</div>
+</div>
+<div class="wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-f0342b05 wp-block-columns-is-layout-flex" style="border-bottom-left-radius:28px;border-bottom-right-radius:28px;margin-top:0;margin-bottom:0">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
+<p class="has-text-align-justify has-text-color has-background has-link-color has-small-font-size wp-elements-253e96df0f881149d043c438b933b606" style="border-bottom-left-radius:28px;border-bottom-right-radius:28px;color:#2812a3;background-color:#6abaf763;padding-right:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">The <strong>National Quantum Science and Technology Institute</strong> (NQSTI) is a consortium funded under Piano Nazionale di Ripresa e Resilienza (PNRR) in the framework of the European Union – NextGenerationEU. It was officially launched in January 2023 and will run for three years. <br/>Its main goals are to team up Italian entities carrying out competitive and innovative research in the field of quantum science and technology (QST), and to stimulate future industrial innovation in this field, providing a forum in which novel ideas and opportunities are transferred to companies. Moreover, a significant fraction of the project resources is dedicated to support a comprehensive education program,to favour technology transfer to companies,and to implement a robust outreach program to make QST pervasive in the society.</p>
+</div>
+</div>
+<div class="wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-5c7af128 wp-block-columns-is-layout-flex" style="border-top-left-radius:28px;border-top-right-radius:28px;padding-right:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
+<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex">
+<div class="wp-block-column has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#6abaf763;padding-top:var(--wp--preset--spacing--50);padding-right:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--50);padding-left:var(--wp--preset--spacing--50)">
+<figure class="wp-block-image aligncenter size-large is-resized is-style-default" style="margin-top:0;margin-bottom:0"><a href="https://www.supercomputing-icsc.it/en/icsc-home/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-581" data-attachment-id="581" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="Screenshot__309_-removebg-preview" data-large-file="https://sipe25.com/wp-content/uploads/2025/07/screenshot__309_-removebg-preview.png?w=666" data-medium-file="https://sipe25.com/wp-content/uploads/2025/07/screenshot__309_-removebg-preview.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/07/screenshot__309_-removebg-preview.png" data-orig-size="666,375" data-permalink="https://sipe25.com/partnerships/screenshot__309_-removebg-preview/" height="375" loading="lazy" sizes="(max-width: 666px) 100vw, 666px" src="https://sipe25.com/wp-content/uploads/2025/07/screenshot__309_-removebg-preview.png?w=666" style="object-fit:contain;width:331px;height:200px" width="666"/></a></figure>
+<p class="has-text-align-justify has-text-color has-link-color has-small-font-size wp-elements-b54ec96728e408983d70ff63f1c2b5f5" id="tw-target-text" style="color:#2812a3;margin-right:0;margin-left:0;padding-right:0;padding-left:0">The <strong>High-Performance Computing, Big Data e Quantum Computing Research Centre</strong>, created and managed by the ICSC, is one of the five National Centres established by the National Recovery and Resilience Plan (NRRP), covering designated strategic sectors for the development of the country: i.e., simulations, computing, and high-performance data analysis, Agritech, development of gene therapy and drugs via RNA technology, sustainable mobility, biodiversity.<br/>The activities of the National Supercomputing Centre will focus on maintenance and upgrade of the Italian HPC and Big Data infrastructure, as well as on the development of advanced methods and numerical applications and software tools to integrate computing, simulation, collection, and analysis of data of interest for research, manufacturing, and society, also through cloud and distributed approaches.</p>
+</div>
+</div>
+</div>
+</div>
+<div aria-hidden="true" class="wp-block-spacer" style="height:50px"></div>
+<h3 class="wp-block-heading alignwide has-text-align-left has-primary-color has-text-color has-link-color wp-elements-b4552c4b118724ab924e0dcf3736e464" style="margin-top:var(--wp--preset--spacing--40);margin-bottom:var(--wp--preset--spacing--40)">With the patronage of:</h3>
+<div class="wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex" style="border-radius:28px">
+<div class="wp-block-column has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#ffb68cbd;padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
+<figure class="wp-block-image aligncenter size-large is-resized" style="margin-top:0;margin-bottom:0"><a href="https://www.comune.bari.it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-540" data-attachment-id="540" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="Logo città di Bari" data-large-file="https://sipe25.com/wp-content/uploads/2025/07/logo-citta-di-bari.png?w=532" data-medium-file="https://sipe25.com/wp-content/uploads/2025/07/logo-citta-di-bari.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/07/logo-citta-di-bari.png" data-orig-size="532,469" data-permalink="https://sipe25.com/partnerships/logo-citta-di-bari/" height="469" loading="lazy" sizes="(max-width: 532px) 100vw, 532px" src="https://sipe25.com/wp-content/uploads/2025/07/logo-citta-di-bari.png?w=532" style="aspect-ratio:1.134375846195505;width:218px;height:auto" width="532"/></a></figure>
+</div>
+<div class="wp-block-column has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#ffb68cbd;padding-top:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--50)">
+<figure class="wp-block-image aligncenter size-large is-resized"><a href="https://www.comune.polignanoamare.ba.it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-543" data-attachment-id="543" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="unnamed-removebg-preview" data-large-file="https://sipe25.com/wp-content/uploads/2025/07/unnamed-removebg-preview.png?w=250" data-medium-file="https://sipe25.com/wp-content/uploads/2025/07/unnamed-removebg-preview.png?w=250" data-orig-file="https://sipe25.com/wp-content/uploads/2025/07/unnamed-removebg-preview.png" data-orig-size="250,180" data-permalink="https://sipe25.com/partnerships/unnamed-removebg-preview/" height="180" loading="lazy" sizes="(max-width: 250px) 100vw, 250px" src="https://sipe25.com/wp-content/uploads/2025/07/unnamed-removebg-preview.png?w=250" style="aspect-ratio:1.3888950093643275;width:236px;height:auto" width="250"/></a></figure>
+</div>
+<div class="wp-block-column is-vertically-aligned-center has-text-color has-background has-link-color wp-elements-abf38fb6b1bad5091a33cbdcc111b870 is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;color:#ffb68cbd;background-color:#ffb68cbd;padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
+<figure class="wp-block-image aligncenter size-large is-resized is-style-default"><a href="https://www.sif.it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-479" data-attachment-id="479" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="logo-SIF-vettoriale-bn-removebg-preview" data-large-file="https://sipe25.com/wp-content/uploads/2025/06/logo-sif-vettoriale-bn-removebg-preview.png?w=500" data-medium-file="https://sipe25.com/wp-content/uploads/2025/06/logo-sif-vettoriale-bn-removebg-preview.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/06/logo-sif-vettoriale-bn-removebg-preview.png" data-orig-size="500,499" data-permalink="https://sipe25.com/partnerships/logo-sif-vettoriale-bn-removebg-preview/" height="499" loading="lazy" sizes="(max-width: 500px) 100vw, 500px" src="https://sipe25.com/wp-content/uploads/2025/06/logo-sif-vettoriale-bn-removebg-preview.png?w=500" style="width:auto;height:200px" width="500"/></a></figure>
+</div>
+</div>
+<div class="wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex" style="border-radius:28px">
+<div class="wp-block-column is-vertically-aligned-center has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#ffb68cbd;padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
+<figure class="wp-block-image aligncenter size-large is-resized"><a href="https://www.tecnopolispst.it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-480" data-attachment-id="480" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="logo_TNOPST-removebg-preview" data-large-file="https://sipe25.com/wp-content/uploads/2025/06/logo_tnopst-removebg-preview.png?w=522" data-medium-file="https://sipe25.com/wp-content/uploads/2025/06/logo_tnopst-removebg-preview.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/06/logo_tnopst-removebg-preview.png" data-orig-size="522,478" data-permalink="https://sipe25.com/partnerships/logo_tnopst-removebg-preview/" height="478" loading="lazy" sizes="(max-width: 522px) 100vw, 522px" src="https://sipe25.com/wp-content/uploads/2025/06/logo_tnopst-removebg-preview.png?w=522" style="object-fit:contain;width:328px;height:200px" width="522"/></a></figure>
+</div>
+<div class="wp-block-column is-vertically-aligned-center has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#ffb68cbd">
+<figure class="wp-block-image aligncenter size-large is-resized"><a href="https://www.regione.puglia.it/web/turismo-e-cultura" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-590" data-attachment-id="590" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="Screenshot (318) (1)" data-large-file="https://sipe25.com/wp-content/uploads/2025/07/screenshot-318-1.png?w=1024" data-medium-file="https://sipe25.com/wp-content/uploads/2025/07/screenshot-318-1.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/07/screenshot-318-1.png" data-orig-size="1080,1080" data-permalink="https://sipe25.com/partnerships/screenshot-318-1/" height="1024" loading="lazy" sizes="(max-width: 1024px) 100vw, 1024px" src="https://sipe25.com/wp-content/uploads/2025/07/screenshot-318-1.png?w=1024" style="width:233px;height:auto" width="1024"/></a></figure>
+</div>
+<div class="wp-block-column is-vertically-aligned-center has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#ffb68cbd">
+<figure class="wp-block-image size-large is-resized" style="margin-top:var(--wp--preset--spacing--50);margin-right:var(--wp--preset--spacing--50);margin-bottom:var(--wp--preset--spacing--50);margin-left:var(--wp--preset--spacing--50)"><a href="https://www.arti.puglia.it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-637" data-attachment-id="637" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="logo-def" data-large-file="https://sipe25.com/wp-content/uploads/2025/09/logo-def.png?w=1024" data-medium-file="https://sipe25.com/wp-content/uploads/2025/09/logo-def.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/09/logo-def.png" data-orig-size="1024,556" data-permalink="https://sipe25.com/partnerships/logo-def/" height="556" loading="lazy" sizes="(max-width: 1024px) 100vw, 1024px" src="https://sipe25.com/wp-content/uploads/2025/09/logo-def.png?w=1024" style="aspect-ratio:1.8418123439172316;width:309px;height:auto" width="1024"/></a></figure>
+</div>
+</div>
+<div aria-hidden="true" class="wp-block-spacer" style="height:50px"></div>
+<h3 class="wp-block-heading alignwide has-text-color has-link-color wp-elements-f32a608c67f1b03516c34a8bc5c27c22" style="color:#2812a3">With the collaboration of:</h3>
+<div class="wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-28f84493 wp-block-columns-is-layout-flex" style="border-radius:28px">
+<div class="wp-block-column is-vertically-aligned-center has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#6abaf763;padding-top:var(--wp--preset--spacing--40);padding-right:0;padding-bottom:var(--wp--preset--spacing--40);padding-left:0">
+<figure class="wp-block-image aligncenter size-large is-resized is-style-default"><a href="https://www.ctao.org/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-465" data-attachment-id="465" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="Outlook-cfiwalb1 (1)" data-large-file="https://sipe25.com/wp-content/uploads/2025/06/outlook-cfiwalb1-1.png?w=628" data-medium-file="https://sipe25.com/wp-content/uploads/2025/06/outlook-cfiwalb1-1.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/06/outlook-cfiwalb1-1.png" data-orig-size="628,155" data-permalink="https://sipe25.com/partnerships/outlook-cfiwalb1-1/" height="155" loading="lazy" sizes="(max-width: 628px) 100vw, 628px" src="https://sipe25.com/wp-content/uploads/2025/06/outlook-cfiwalb1-1.png?w=628" style="aspect-ratio:4.05195397060499;width:280px;height:auto" width="628"/></a></figure>
+</div>
+<div class="wp-block-column is-vertically-aligned-center has-background is-layout-flow wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#6abaf763;padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
+<figure class="wp-block-image aligncenter size-large is-resized"><a href="https://www.icfo.eu/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-463" data-attachment-id="463" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="ICFO (1)" data-large-file="https://sipe25.com/wp-content/uploads/2025/06/icfo-1.png?w=1024" data-medium-file="https://sipe25.com/wp-content/uploads/2025/06/icfo-1.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/06/icfo-1.png" data-orig-size="1634,551" data-permalink="https://sipe25.com/partnerships/icfo-1/" height="345" loading="lazy" sizes="(max-width: 1024px) 100vw, 1024px" src="https://sipe25.com/wp-content/uploads/2025/06/icfo-1.png?w=1024" style="aspect-ratio:2.965357372826787;width:216px;height:auto" width="1024"/></a></figure>
+</div>
+<div class="wp-block-column is-vertically-aligned-center has-background is-layout-flow wp-container-core-column-is-layout-918ae4a1 wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#6abaf763;padding-top:var(--wp--preset--spacing--30);padding-right:0;padding-bottom:var(--wp--preset--spacing--30);padding-left:0">
+<figure class="wp-block-image aligncenter size-large is-resized"><a href="https://www.sitecquality.it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-605" data-attachment-id="605" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="Logo Orizzontale_420773 SITEC" data-large-file="https://sipe25.com/wp-content/uploads/2025/08/logo-orizzontale_420773-sitec.png?w=1024" data-medium-file="https://sipe25.com/wp-content/uploads/2025/08/logo-orizzontale_420773-sitec.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/08/logo-orizzontale_420773-sitec.png" data-orig-size="2154,690" data-permalink="https://sipe25.com/partnerships/logo-orizzontale_420773-sitec/" height="328" loading="lazy" sizes="(max-width: 1024px) 100vw, 1024px" src="https://sipe25.com/wp-content/uploads/2025/08/logo-orizzontale_420773-sitec.png?w=1024" style="aspect-ratio:3.122910076818798;object-fit:cover;width:244px;height:auto" width="1024"/></a></figure>
+</div>
+<div class="wp-block-column is-vertically-aligned-center has-background is-layout-flow wp-container-core-column-is-layout-918ae4a1 wp-block-column-is-layout-flow" style="border-radius:28px;background-color:#6abaf763;padding-top:var(--wp--preset--spacing--30);padding-right:0;padding-bottom:var(--wp--preset--spacing--30);padding-left:0">
+<figure class="wp-block-image aligncenter size-large is-resized"><a href="https://fioredipuglia.com/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-577" data-attachment-id="577" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="images-removebg-preview" data-large-file="https://sipe25.com/wp-content/uploads/2025/07/images-removebg-preview.png?w=200" data-medium-file="https://sipe25.com/wp-content/uploads/2025/07/images-removebg-preview.png?w=200" data-orig-file="https://sipe25.com/wp-content/uploads/2025/07/images-removebg-preview.png" data-orig-size="200,200" data-permalink="https://sipe25.com/partnerships/images-removebg-preview/" height="200" loading="lazy" sizes="(max-width: 200px) 100vw, 200px" src="https://sipe25.com/wp-content/uploads/2025/07/images-removebg-preview.png?w=200" style="object-fit:cover;width:94px;height:auto" width="200"/></a></figure>
+</div>
+</div>
+<div aria-hidden="true" class="wp-block-spacer" style="height:50px"></div>
+</div>
+<div class="wp-block-template-part">
+</div>
+</div>
+</main>
+<div class="wp-block-group is-layout-flow wp-block-group-is-layout-flow" style="margin-top:0px;margin-bottom:0px">
+<footer class="wp-block-template-part">
+<div class="wp-block-group alignfull has-background has-global-padding is-content-justification-center is-layout-constrained wp-container-core-group-is-layout-df757ecc wp-block-group-is-layout-constrained" style="background-color:#b61200;margin-top:0;margin-bottom:0;padding-top:calc( 0.5 * var(--wp--style--root--padding-right, var(--wp--custom--gap--horizontal)));padding-right:var(--wp--style--root--padding-right, var(--wp--custom--gap--horizontal));padding-bottom:calc( 0.5 * var(--wp--style--root--padding-right, var(--wp--custom--gap--horizontal)));padding-left:var(--wp--style--root--padding-left, var(--wp--custom--gap--horizontal))">
+<div aria-hidden="true" class="wp-block-spacer" style="height:0px"></div>
+<div class="aligncenter is-style-rounded is-style-rounded--2 wp-block-site-logo"><a class="custom-logo-link" href="../" rel="home"><img alt="" class="custom-logo" data-attachment-id="404" data-comments-opened="1" data-image-caption="" data-image-description="" data-image-meta='{"aperture":"0","credit":"","camera":"","caption":"","created_timestamp":"0","copyright":"","focal_length":"0","iso":"0","shutter_speed":"0","title":"","orientation":"0"}' data-image-title="crepuscolo, grande" data-large-file="../wp-content/uploads/2025/03/crepuscolo-grande-12dff.png?w=1024" data-medium-file="https://sipe25.com/wp-content/uploads/2025/03/crepuscolo-grande-1.png?w=300" data-orig-file="https://sipe25.com/wp-content/uploads/2025/03/crepuscolo-grande-1.png" data-orig-size="8283,8283" data-permalink="https://sipe25.com/?attachment_id=404" decoding="async" height="87" sizes="(max-width: 87px) 100vw, 87px" src="../wp-content/uploads/2025/03/crepuscolo-grande-1.png" width="87"/></a></div>
+<div class="wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-25c28f93 wp-block-columns-is-layout-flex" style="padding-right:0;padding-left:0">
+<div class="wp-block-column is-layout-flow wp-container-core-column-is-layout-fcb47e9f wp-block-column-is-layout-flow" style="padding-top:var(--wp--preset--spacing--40);padding-right:0;padding-bottom:var(--wp--preset--spacing--40);padding-left:0">
+<p class="has-text-align-center has-text-color has-link-color has-medium-font-size wp-elements-e82919790b285efdc37feea8ac48b699" style="color:#ffffff"><em><strong>Follow us</strong></em></p>
+<figure class="wp-block-image aligncenter size-full is-resized"><a href="https://www.instagram.com/sipe.25/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-49" height="900" loading="lazy" src="https://sipe25.wordpress.com/wp-content/uploads/2025/03/instagram_icon.png" style="width:49px;height:auto" width="900"/></a></figure>
+</div>
+<div class="wp-block-column is-layout-flow wp-container-core-column-is-layout-d3fb2301 wp-block-column-is-layout-flow" style="padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
+<p class="has-text-align-center has-text-color has-link-color has-medium-font-size wp-elements-97c6bd243ebe2d0821d9eefeaf54ab0c" style="color:#ffffff"><em><strong>About AISF</strong></em></p>
+<figure class="wp-block-image aligncenter size-large is-resized"><a href="https://ai-sf.it/" rel="noreferrer noopener" target="_blank"><img alt="" class="wp-image-230" height="372" loading="lazy" src="https://sipe25.wordpress.com/wp-content/uploads/2025/03/sbanner.png?w=1024" style="aspect-ratio:2.74664817383264;width:157px;height:auto" width="1024"/></a></figure>
+</div>
+<div class="wp-block-column is-layout-flow wp-container-core-column-is-layout-d3fb2301 wp-block-column-is-layout-flow" style="padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
+<p class="has-text-align-center has-text-color has-link-color has-medium-font-size wp-elements-2b88fdc9d8f947da171276cb55ab7797" style="color:#ffffff"><em><strong>Contacts</strong></em></p>
+<p class="has-text-align-center has-text-color has-link-color has-x-small-font-size wp-elements-a129928979628e92d53a3668fb8f5105" style="color:#ffffff"><strong><em>sipe25@ai-sf.it</em></strong><br/><a href="https://www.instagram.com/aisfbari/">instagram.com/aisfbari/</a></p>
+</div>
+</div>
+<div aria-hidden="true" class="wp-block-spacer" style="height:7px"></div>
+</div>
+</footer>
+</div>
+</div>
+<!-- wpcom_wp_footer -->
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"\/*"},{"not":{"href_matches":["\/wp-*.php","\/wp-admin\/*","\/files\/*","\/wp-content\/*","\/wp-content\/plugins\/*","\/wp-content\/themes\/pub\/kentwood\/*","\/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+<script id="grofiles-cards-js" src="http://0.gravatar.com/js/hovercards/hovercards.min.js?ver=202537924dcd77a86c6f1d3698ec27fc5da92b28585ddad3ee636c0397cf312193b2a1"></script>
+<script id="wpgroho-js-extra">
+var WPGroHo = {"my_hash":""};
+</script>
+<script crossorigin="anonymous" src="https://s2.wp.com/wp-content/mu-plugins/gravatar-hovercards/wpgroho.js?m=1610363240i" type="text/javascript"></script>
+<script>
+		// Initialize and attach hovercards to all gravatars
+		( function() {
+			function init() {
+				if ( typeof Gravatar === 'undefined' ) {
+					return;
+				}
+
+				if ( typeof Gravatar.init !== 'function' ) {
+					return;
+				}
+
+				Gravatar.profile_cb = function ( hash, id ) {
+					WPGroHo.syncProfileData( hash, id );
+				};
+
+				Gravatar.my_hash = WPGroHo.my_hash;
+				Gravatar.init(
+					'body',
+					'#wp-admin-bar-my-account',
+					{
+						i18n: {
+							'Edit your profile →': 'Modifica il tuo profilo →',
+							'View profile →': 'Visualizza profilo →',
+							'Contact': 'Contatti',
+							'Send money': 'Invia denaro',
+							'Sorry, we are unable to load this Gravatar profile.': 'Impossibile caricare questo profilo Gravatar.',
+							'Gravatar not found.': 'Gravatar not found.',
+							'Too Many Requests.': 'Troppe richieste.',
+							'Internal Server Error.': 'Errore server interno.',
+							'Is this you?': 'Sei tu?',
+							'Claim your free profile.': 'Claim your free profile.',
+							'Email': 'E-mail',
+							'Home Phone': 'Numero di casa',
+							'Work Phone': 'Telefono aziendale',
+							'Cell Phone': 'Cell Phone',
+							'Contact Form': 'Modulo di contatto',
+							'Calendar': 'Calendario',
+						},
+					}
+				);
+			}
+
+			if ( document.readyState !== 'loading' ) {
+				init();
+			} else {
+				document.addEventListener( 'DOMContentLoaded', init );
+			}
+		} )();
+	</script>
+<div style="display:none">
+</div>
+<div id="jp-carousel-loading-overlay">
+<div id="jp-carousel-loading-wrapper">
+<span id="jp-carousel-library-loading"> </span>
+</div>
+</div>
+<div class="jp-carousel-overlay" style="display: none;">
+<div class="jp-carousel-container">
+<!-- The Carousel Swiper -->
+<div class="jp-carousel-wrap swiper jp-carousel-swiper-container jp-carousel-transitions" itemscope="" itemtype="https://schema.org/ImageGallery">
+<div class="jp-carousel swiper-wrapper"></div>
+<div class="jp-swiper-button-prev swiper-button-prev">
+<svg fill="none" height="24" viewbox="0 0 25 24" width="25" xmlns="http://www.w3.org/2000/svg">
+<mask height="12" id="maskPrev" mask-type="alpha" maskunits="userSpaceOnUse" width="9" x="8" y="6">
+<path d="M16.2072 16.59L11.6496 12L16.2072 7.41L14.8041 6L8.8335 12L14.8041 18L16.2072 16.59Z" fill="white"></path>
+</mask>
+<g mask="url(#maskPrev)">
+<rect fill="#FFFFFF" height="24" width="23.8823" x="0.579102"></rect>
+</g>
+</svg>
+</div>
+<div class="jp-swiper-button-next swiper-button-next">
+<svg fill="none" height="24" viewbox="0 0 25 24" width="25" xmlns="http://www.w3.org/2000/svg">
+<mask height="12" id="maskNext" mask-type="alpha" maskunits="userSpaceOnUse" width="8" x="8" y="6">
+<path d="M8.59814 16.59L13.1557 12L8.59814 7.41L10.0012 6L15.9718 12L10.0012 18L8.59814 16.59Z" fill="white"></path>
+</mask>
+<g mask="url(#maskNext)">
+<rect fill="#FFFFFF" height="24" width="23.8822" x="0.34375"></rect>
+</g>
+</svg>
+</div>
+</div>
+<!-- The main close buton -->
+<div class="jp-carousel-close-hint">
+<svg fill="none" height="24" viewbox="0 0 25 24" width="25" xmlns="http://www.w3.org/2000/svg">
+<mask height="14" id="maskClose" mask-type="alpha" maskunits="userSpaceOnUse" width="15" x="5" y="5">
+<path d="M19.3166 6.41L17.9135 5L12.3509 10.59L6.78834 5L5.38525 6.41L10.9478 12L5.38525 17.59L6.78834 19L12.3509 13.41L17.9135 19L19.3166 17.59L13.754 12L19.3166 6.41Z" fill="white"></path>
+</mask>
+<g mask="url(#maskClose)">
+<rect fill="#FFFFFF" height="24" width="23.8823" x="0.409668"></rect>
+</g>
+</svg>
+</div>
+<!-- Image info, comments and meta -->
+<div class="jp-carousel-info">
+<div class="jp-carousel-info-footer">
+<div class="jp-carousel-pagination-container">
+<div class="jp-swiper-pagination swiper-pagination"></div>
+<div class="jp-carousel-pagination"></div>
+</div>
+<div class="jp-carousel-photo-title-container">
+<h2 class="jp-carousel-photo-caption"></h2>
+</div>
+<div class="jp-carousel-photo-icons-container">
+<a aria-label="Attiva/disattiva visibilità dei metadata delle foto" class="jp-carousel-icon-btn jp-carousel-icon-info" href="#">
+<span class="jp-carousel-icon">
+<svg fill="none" height="24" viewbox="0 0 25 24" width="25" xmlns="http://www.w3.org/2000/svg">
+<mask height="20" id="maskInfo" mask-type="alpha" maskunits="userSpaceOnUse" width="21" x="2" y="2">
+<path clip-rule="evenodd" d="M12.7537 2C7.26076 2 2.80273 6.48 2.80273 12C2.80273 17.52 7.26076 22 12.7537 22C18.2466 22 22.7046 17.52 22.7046 12C22.7046 6.48 18.2466 2 12.7537 2ZM11.7586 7V9H13.7488V7H11.7586ZM11.7586 11V17H13.7488V11H11.7586ZM4.79292 12C4.79292 16.41 8.36531 20 12.7537 20C17.142 20 20.7144 16.41 20.7144 12C20.7144 7.59 17.142 4 12.7537 4C8.36531 4 4.79292 7.59 4.79292 12Z" fill="white" fill-rule="evenodd"></path>
+</mask>
+<g mask="url(#maskInfo)">
+<rect fill="#FFFFFF" height="24" width="23.8823" x="0.8125"></rect>
+</g>
+</svg>
+</span>
+</a>
+<a aria-label="Attiva/disattiva visibilità dei commenti alle foto" class="jp-carousel-icon-btn jp-carousel-icon-comments" href="#">
+<span class="jp-carousel-icon">
+<svg fill="none" height="24" viewbox="0 0 25 24" width="25" xmlns="http://www.w3.org/2000/svg">
+<mask height="20" id="maskComments" mask-type="alpha" maskunits="userSpaceOnUse" width="21" x="2" y="2">
+<path clip-rule="evenodd" d="M4.3271 2H20.2486C21.3432 2 22.2388 2.9 22.2388 4V16C22.2388 17.1 21.3432 18 20.2486 18H6.31729L2.33691 22V4C2.33691 2.9 3.2325 2 4.3271 2ZM6.31729 16H20.2486V4H4.3271V18L6.31729 16Z" fill="white" fill-rule="evenodd"></path>
+</mask>
+<g mask="url(#maskComments)">
+<rect fill="#FFFFFF" height="24" width="23.8823" x="0.34668"></rect>
+</g>
+</svg>
+<span aria-label="Questa immagine ha dei commenti." class="jp-carousel-has-comments-indicator"></span>
+</span>
+</a>
+</div>
+</div>
+<div class="jp-carousel-info-extra">
+<div class="jp-carousel-info-content-wrapper">
+<div class="jp-carousel-photo-title-container">
+<h2 class="jp-carousel-photo-title"></h2>
+</div>
+<div class="jp-carousel-comments-wrapper">
+<div id="jp-carousel-comments-loading">
+<span>Caricamento commenti...</span>
+</div>
+<div class="jp-carousel-comments"></div>
+<div id="jp-carousel-comment-form-container">
+<span id="jp-carousel-comment-form-spinner"> </span>
+<div id="jp-carousel-comment-post-results"></div>
+<form id="jp-carousel-comment-form">
+<label class="screen-reader-text" for="jp-carousel-comment-form-comment-field">Scrivi un Commento...</label>
+<textarea class="jp-carousel-comment-form-field jp-carousel-comment-form-textarea" id="jp-carousel-comment-form-comment-field" name="comment" placeholder="Scrivi un Commento..."></textarea>
+<div id="jp-carousel-comment-form-submit-and-info-wrapper">
+<div id="jp-carousel-comment-form-commenting-as">
+<fieldset>
+<label for="jp-carousel-comment-form-email-field">E-mail (Obbligatorio)</label>
+<input class="jp-carousel-comment-form-field jp-carousel-comment-form-text-field" id="jp-carousel-comment-form-email-field" name="email" type="text"/>
+</fieldset>
+<fieldset>
+<label for="jp-carousel-comment-form-author-field">Nome (Obbligatorio)</label>
+<input class="jp-carousel-comment-form-field jp-carousel-comment-form-text-field" id="jp-carousel-comment-form-author-field" name="author" type="text"/>
+</fieldset>
+<fieldset>
+<label for="jp-carousel-comment-form-url-field">Sito web</label>
+<input class="jp-carousel-comment-form-field jp-carousel-comment-form-text-field" id="jp-carousel-comment-form-url-field" name="url" type="text"/>
+</fieldset>
+</div>
+<input class="jp-carousel-comment-form-button" id="jp-carousel-comment-form-button-submit" name="submit" type="submit" value="Pubblica un commento"/>
+</div>
+</form>
+</div>
+</div>
+<div class="jp-carousel-image-meta">
+<div class="jp-carousel-title-and-caption">
+<div class="jp-carousel-photo-info">
+<h3 class="jp-carousel-caption" itemprop="caption description"></h3>
+</div>
+<div class="jp-carousel-photo-description"></div>
+</div>
+<ul class="jp-carousel-image-exif" style="display: none;"></ul>
+<a class="jp-carousel-image-download" href="#" style="display: none;" target="_blank">
+<svg fill="none" height="24" viewbox="0 0 25 24" width="25" xmlns="http://www.w3.org/2000/svg">
+<mask height="18" id="mask0" mask-type="alpha" maskunits="userSpaceOnUse" width="19" x="3" y="3">
+<path clip-rule="evenodd" d="M5.84615 5V19H19.7775V12H21.7677V19C21.7677 20.1 20.8721 21 19.7775 21H5.84615C4.74159 21 3.85596 20.1 3.85596 19V5C3.85596 3.9 4.74159 3 5.84615 3H12.8118V5H5.84615ZM14.802 5V3H21.7677V10H19.7775V6.41L9.99569 16.24L8.59261 14.83L18.3744 5H14.802Z" fill="white" fill-rule="evenodd"></path>
+</mask>
+<g mask="url(#mask0)">
+<rect fill="#FFFFFF" height="24" width="23.8823" x="0.870605"></rect>
+</g>
+</svg>
+<span class="jp-carousel-download-text"></span>
+</a>
+<div class="jp-carousel-image-map" style="display: none;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script id="jetpack-carousel-js-extra">
+var jetpackSwiperLibraryPath = {"url":"https:\/\/s2.wp.com\/wp-content\/mu-plugins\/jetpack-plugin\/moon\/_inc\/blocks\/swiper.js"};
+var jetpackCarouselStrings = {"widths":[370,700,1000,1200,1400,2000],"is_logged_in":"","lang":"it","ajaxurl":"https:\/\/sipe25.com\/wp-admin\/admin-ajax.php","nonce":"8ed80a954a","display_exif":"1","display_comments":"1","single_image_gallery":"1","single_image_gallery_media_file":"","background_color":"black","comment":"Commento","post_comment":"Pubblica un commento","write_comment":"Scrivi un Commento...","loading_comments":"Caricamento commenti...","image_label":"Apri immagine a schermo intero.","download_original":"Vedi immagine a grandezza originale<span class=\"photo-size\">{0}<span class=\"photo-size-times\">\u00d7<\/span>{1}<\/span>","no_comment_text":"Assicurati di scrivere del testo nel commento.","no_comment_email":"Fornisci un indirizzo e-mail per commentare.","no_comment_author":"Fornisci il tuo nome per commentare.","comment_post_error":"Si \u00e8 verificato un problema durante la pubblicazione del commento. Riprova pi\u00f9 tardi.","comment_approved":"Il tuo commento \u00e8 stato approvato.","comment_unapproved":"Il tuo commento deve venire moderato.","camera":"Fotocamera","aperture":"Apertura","shutter_speed":"Velocit\u00e0 di scatto","focal_length":"Lunghezza focale","copyright":"Copyright","comment_registration":"0","require_name_email":"1","login_url":"https:\/\/sipe25.wordpress.com\/wp-login.php?redirect_to=https%3A%2F%2Fsipe25.com%2Fpartnerships%2F","blog_id":"242551851","meta_data":["camera","aperture","shutter_speed","focal_length","copyright"],"stats_query_args":"blog=242551851&v=wpcom&tz=2&user_id=0&subd=sipe25","is_public":"1"};
+</script>
+<script id="comment-like-js-extra">
+var comment_like_text = {"loading":"Caricamento...","swipeUrl":"https:\/\/s2.wp.com\/wp-content\/mu-plugins\/comment-likes\/js\/lib\/swipe.js?ver=20131008"};
+</script>
+<script crossorigin="anonymous" src="https://s1.wp.com/_static/??-eJx9jcEKgzAQRH+ocREa4kX6KWLXUDZmd0OT4O+bg/YgxeM85s3AlgyqFC8FuJoU64ckQ/AlzbgeGVhVYCJBeFeKC+D81Zp9/PVO0DFJF/ID/s+iMjdkIq2+nVzAnXjsmy015RKb9+Kxd9YOzg1PG3bQ209R" type="text/javascript"></script>
+<script id="wp-block-template-skip-link-js-after">
+	( function() {
+		var skipLinkTarget = document.querySelector( 'main' ),
+			sibling,
+			skipLinkTargetID,
+			skipLink;
+
+		// Early exit if a skip-link target can't be located.
+		if ( ! skipLinkTarget ) {
+			return;
+		}
+
+		/*
+		 * Get the site wrapper.
+		 * The skip-link will be injected in the beginning of it.
+		 */
+		sibling = document.querySelector( '.wp-site-blocks' );
+
+		// Early exit if the root element was not found.
+		if ( ! sibling ) {
+			return;
+		}
+
+		// Get the skip-link target's ID, and generate one if it doesn't exist.
+		skipLinkTargetID = skipLinkTarget.id;
+		if ( ! skipLinkTargetID ) {
+			skipLinkTargetID = 'wp--skip-link--target';
+			skipLinkTarget.id = skipLinkTargetID;
+		}
+
+		// Create the skip link.
+		skipLink = document.createElement( 'a' );
+		skipLink.classList.add( 'skip-link', 'screen-reader-text' );
+		skipLink.id = 'wp-skip-link';
+		skipLink.href = '#' + skipLinkTargetID;
+		skipLink.innerText = 'Vai al contenuto';
+
+		// Inject the skip link.
+		sibling.parentElement.insertBefore( skipLink, sibling );
+	}() );
+	
+</script>
+<script type="text/javascript">
+		(function () {
+			var wpcom_reblog = {
+				source: 'toolbar',
+
+				toggle_reblog_box_flair: function (obj_id, post_id) {
+
+					// Go to site selector. This will redirect to their blog if they only have one.
+					const postEndpoint = `https://wordpress.com/post`;
+
+					// Ideally we would use the permalink here, but fortunately this will be replaced with the 
+					// post permalink in the editor.
+					const originalURL = `${ document.location.href }?page_id=${ post_id }`; 
+					
+					const url =
+						postEndpoint +
+						'?url=' +
+						encodeURIComponent( originalURL ) +
+						'&is_post_share=true' +
+						'&v=5';
+
+					const redirect = function () {
+						if (
+							! window.open( url, '_blank' )
+						) {
+							location.href = url;
+						}
+					};
+
+					if ( /Firefox/.test( navigator.userAgent ) ) {
+						setTimeout( redirect, 0 );
+					} else {
+						redirect();
+					}
+				},
+			};
+
+			window.wpcom_reblog = wpcom_reblog;
+		})();
+	</script>
+<script defer="" src="http://stats.wp.com/w.js?68"></script> <script type="text/javascript">
+_tkq = window._tkq || [];
+_stq = window._stq || [];
+_tkq.push(['storeContext', {'blog_id':'242551851','blog_tz':'2','user_lang':'it','blog_lang':'it','user_id':'0'}]);
+_stq.push(['view', {'blog':'242551851','v':'wpcom','tz':'2','user_id':'0','post':'39','subd':'sipe25'}]);
+_stq.push(['extra', {'crypt':'UE5tW3cvZGQyS1Y3djh4b011RjZBdnVwT2xua3V6cS0ucnN+WVo0WyY3dDZqYjhEWzZBJlQ5QmQuRV9GaiUxJi9ufGp4LTBCc2dxTy9QcnhaZ0cueSw1cFQtNmEtWnQscSVza2NRQ1c5dElEL1UsJi1ia1REMXlDVXJzZ1NOOEw5ak1KNTk1LUwxUExFTWc2RDZwP2pBZiUxZ2F+a3Z5bFR1W345UjR0Z0NOT1k4cm4='}]);
+_stq.push([ 'clickTrackerInit', '242551851', '39' ]);
+</script>
+<noscript><img alt="" src="https://pixel.wp.com/b.gif?v=noscript" style="height:1px;width:1px;overflow:hidden;position:absolute;bottom:1px;"/></noscript>
+<meta content="" data-custom-props='{"logged_in":"0","wptheme":"pub\/kentwood","wptheme_is_block":"1"}' data-provider="wordpress.com" data-service="simple" data-site-tz="Europe/Rome" id="bilmur" property="bilmur:data"/>
+<script defer="" src="../wp-content/js/bilmur.mind160.js?i=16&amp;m=202537"></script> </body>
+<!-- Mirrored from sipe25.com/partnerships/ by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 11 Sep 2025 14:49:07 GMT -->
+</html>
